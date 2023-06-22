@@ -32,23 +32,24 @@ for mouse = 1:length(twoOptoDir)
     mouseDir = dir('**/*.mat');
     numSessions = length(mouseDir);
     
-    % Check the dates, and delete before 6-20 (when opto ramp was set to +50)
+    % Check the dates, and delete before 6-20 (opto ramp was set to +50)
     idx = zeros(1,numSessions); 
     for i = 1:numSessions
         temp = mouseDir(i).name;
         temp = datetime(temp(1:end-4));
-        idx(i) = temp > datetime('16-Jun-2023'); 
+        idx{i} = temp > datetime('16-Jun-2023'); 
     end
-    
-    % How many sessions made the cut
-    numSessions = sum(idx);
+
+
+
     if numSessions == 0
         continue
     end
     
-    % Update the Mouse Directory with sessions that make the cut
-    mouseDir = mouseDir(logical(idx));
-    %% Init 
+    
+
+
+    % Init 
     stimDesc = [];
     azimuths = [];
     elevations = [];
