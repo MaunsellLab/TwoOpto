@@ -6,6 +6,9 @@ addpath '/Users/jacksoncone/Documents/GitHub/TwoOpto';
 % List of Animals in the twoOpto GitHub Folder
 animals = {'2401','2454','2456','2475','2488'};
 
+% Set Cut off Date (Opto Ramp was set to 50 ms before 6/20/2023)
+
+
 % Set this to the location of the data files on your machine
 [~, name] = system('hostname');
 name = lower(name);
