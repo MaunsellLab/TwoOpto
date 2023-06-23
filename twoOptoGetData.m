@@ -4,10 +4,7 @@ addpath '/Users/jacksoncone/Documents/GitHub/TwoOpto';
 % Grab twoOpto Data and plot a heatmap of impairment by condition
 
 % List of Animals in the twoOpto GitHub Folder
-animals = {'2401','2454','2456','2475','2488'};
-
-% Set Cut off Date (Opto Ramp was set to 50 ms before 6/20/2023)
-
+animals = {'2339','2365','2394','2396','2401','2454','2456','2475','2488'};
 
 % Set this to the location of the data files on your machine
 [~, name] = system('hostname');
@@ -64,6 +61,11 @@ for mouse = 1:length(twoOptoDir)
     for session = 1:numSessions
         % Load Session MatFile
         load(mouseDir(session).name);
+
+        % Sometimes github won't have todays data but the file exists.
+        if ~exist('trials')
+            continue
+        end
 
         % Which Fields are present
         f = fieldnames(trials);
