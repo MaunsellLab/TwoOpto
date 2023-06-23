@@ -62,6 +62,11 @@ for mouse = 1:length(twoOptoDir)
         % Load Session MatFile
         load(mouseDir(session).name);
 
+        % Sometimes github won't have todays data but the file exists.
+        if ~exist('trials')
+            continue
+        end
+
         % Which Fields are present
         f = fieldnames(trials);
 
