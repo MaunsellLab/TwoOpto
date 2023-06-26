@@ -1,13 +1,9 @@
-% twoOptoGetData
-
+% two opto all mice
 addpath '/Users/jacksoncone/Documents/GitHub/TwoOpto';
 % Grab twoOpto Data and plot a heatmap of impairment by condition
 
 % List of Animals in the twoOpto GitHub Folder
-animals = {'2401','2454','2456','2475','2488'};
-
-% Set Cut off Date (Opto Ramp was set to 50 ms before 6/20/2023)
-
+animals = {'2339','2365','2394','2396','2401','2454','2456','2475','2488'};
 
 % Set this to the location of the data files on your machine
 [~, name] = system('hostname');
@@ -23,48 +19,52 @@ twoOptoDir = dir(filePath);
 % Filter Folders by the list of animals
 twoOptoDir = twoOptoDir(ismember({twoOptoDir.name}, animals));
 
-%% 
+%% Init
+stimDesc = [];
+azimuths = [];
+elevations = [];
+noOptoIdx = [];
+v1StimIdx = [];
+scStimIdx = [];
+twoOptoIdx = [];
+topUpIdx = [];
+outcomes = [];
+RTs = [];
+contrast = [];
+%% Concat all mice
 
-%% Loop Through Mouse Folders
 for mouse = 1:length(twoOptoDir)
     cd(strcat(filePath,twoOptoDir(mouse).name,'/','MatFiles/'));
     % How Many Sessions for This Mouse?
     mouseDir = dir('**/*.mat');
     numSessions = length(mouseDir);
     
-    % Check the dates, and delete before 6-20 (opto ramp was set to +50)
+    % Check the dates, and delete before 6-20 (when opto ramp was set to +50)
     idx = zeros(1,numSessions); 
     for i = 1:numSessions
         temp = mouseDir(i).name;
         temp = datetime(temp(1:end-4));
-        idx{i} = temp > datetime('16-Jun-2023'); 
+        idx(i) = temp > datetime('16-Jun-2023'); 
     end
-
-
-
+    
+    % How many sessions made the cut
+    numSessions = sum(idx);
     if numSessions == 0
         continue
     end
     
-    
+    % Update the Mouse Directory with sessions that make the cut
+    mouseDir = mouseDir(logical(idx));
 
-
-    % Init 
-    stimDesc = [];
-    azimuths = [];
-    elevations = [];
-    noOptoIdx = [];
-    v1StimIdx = [];
-    scStimIdx = [];
-    twoOptoIdx = [];
-    topUpIdx = [];
-    outcomes = [];
-    RTs = [];
-    contrast = [];
 
     for session = 1:numSessions
         % Load Session MatFile
         load(mouseDir(session).name);
+
+        % Sometimes github won't have todays data but the file exists.
+        if ~exist('trials')
+            continue
+        end
 
         % Which Fields are present
         f = fieldnames(trials);
@@ -91,6 +91,7 @@ for mouse = 1:length(twoOptoDir)
         topUpIdx  = [topUpIdx, [trials(:).contrastPC] == 50];
 
     end
+end
 
     % Clean Up
     clear trials stimDesc file dParams numSessions
@@ -102,8 +103,6 @@ for mouse = 1:length(twoOptoDir)
     masterTable = table(contrast', RTs', hit', miss', fa', noOptoIdx', v1StimIdx', scStimIdx', twoOptoIdx', topUpIdx');
     masterTable.Properties.VariableNames = {'contrastPC','RT','hit','miss','fa','noOptoTrial', 'v1Trial','scTrial', 'twoOptoTrial', 'topUpTrial'};
 
-    %% Compute Performance 
-    
 
     % Total Trials
     nV1Trials       = sum(masterTable.v1Trial & ~masterTable.fa);
@@ -111,7 +110,7 @@ for mouse = 1:length(twoOptoDir)
     nTwoOptoTrials  = sum(masterTable.twoOptoTrial & ~masterTable.fa);
     nNoOptoTrials   = sum(masterTable.noOptoTrial & ~masterTable.fa);
     nTopUpTrials    = sum(masterTable.topUpTrial & ~masterTable.fa);
-    
+
     % Total Hits
     nV1Hits = sum(masterTable.v1Trial & masterTable.hit);
     nSCHits = sum(masterTable.scTrial & masterTable.hit);
@@ -119,15 +118,13 @@ for mouse = 1:length(twoOptoDir)
     nNoOptoHits = sum(masterTable.noOptoTrial & masterTable.hit);
     nTopUpHits = sum(masterTable.topUpTrial & masterTable.hit);
 
-    % Compute pHit and CIs given alpha (CI) 
+    % Compute pHit and CIs given alpha (CI)
     [V1phat,V1pci] = binofit(nV1Hits,nV1Trials);
     [SCphat,SCpci] = binofit(nSCHits,nSCTrials);
     [twoOptophat,twoOptopci] = binofit(nTwoOptoHits,nTwoOptoTrials);
     [noOptophat,noOptopci] = binofit(nNoOptoHits,nNoOptoTrials);
     [topUpphat,topUppci] = binofit(nTopUpHits,nTopUpTrials);
 
-
-%% Plot Results For This Mouse
     locs = [1 2 3 4 5];
     perf = [noOptophat, V1phat, SCphat, twoOptophat, topUpphat];
 
@@ -161,6 +158,4 @@ for mouse = 1:length(twoOptoDir)
 
     % Save Figure
     saveas(gcf, [strcat(filePath, 'Results/', animals{1,mouse},'.tif')]);
-end
-
 
