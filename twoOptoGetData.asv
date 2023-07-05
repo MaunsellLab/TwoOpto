@@ -1,9 +1,10 @@
-% two opto all mice
+% twoOptoGetData
+
 addpath '/Users/jacksoncone/Documents/GitHub/TwoOpto';
 % Grab twoOpto Data and plot a heatmap of impairment by condition
 
 % List of Animals in the twoOpto GitHub Folder
-%animals = {'2339','2365','2394','2396','2401','2454','2456','2475','2488'};
+animals = {'2365','2394','2396', '2397','2401', '2452','2454','2456','2475','2485','2488', '2589'};
 
 % Set this to the location of the data files on your machine
 [~, name] = system('hostname');
@@ -19,20 +20,9 @@ twoOptoDir = dir(filePath);
 % Filter Folders by the list of animals
 twoOptoDir = twoOptoDir(ismember({twoOptoDir.name}, animals));
 
-%% Init
-stimDesc = [];
-azimuths = [];
-elevations = [];
-noOptoIdx = [];
-v1StimIdx = [];
-scStimIdx = [];
-twoOptoIdx = [];
-topUpIdx = [];
-outcomes = [];
-RTs = [];
-contrast = [];
-%% Concat all mice
+%% 
 
+%% Loop Through Mouse Folders
 for mouse = 1:length(twoOptoDir)
     cd(strcat(filePath,twoOptoDir(mouse).name,'/','MatFiles/'));
     % How Many Sessions for This Mouse?
@@ -55,7 +45,18 @@ for mouse = 1:length(twoOptoDir)
     
     % Update the Mouse Directory with sessions that make the cut
     mouseDir = mouseDir(logical(idx));
-
+    %% Init 
+    stimDesc = [];
+    azimuths = [];
+    elevations = [];
+    noOptoIdx = [];
+    v1StimIdx = [];
+    scStimIdx = [];
+    twoOptoIdx = [];
+    topUpIdx = [];
+    outcomes = [];
+    RTs = [];
+    contrast = [];
 
     for session = 1:numSessions
         % Load Session MatFile
@@ -91,7 +92,6 @@ for mouse = 1:length(twoOptoDir)
         topUpIdx  = [topUpIdx, [trials(:).contrastPC] == 50];
 
     end
-end
 
     % Clean Up
     clear trials stimDesc file dParams numSessions
@@ -103,6 +103,8 @@ end
     masterTable = table(contrast', RTs', hit', miss', fa', noOptoIdx', v1StimIdx', scStimIdx', twoOptoIdx', topUpIdx');
     masterTable.Properties.VariableNames = {'contrastPC','RT','hit','miss','fa','noOptoTrial', 'v1Trial','scTrial', 'twoOptoTrial', 'topUpTrial'};
 
+    %% Compute Performance 
+    
 
     % Total Trials
     nV1Trials       = sum(masterTable.v1Trial & ~masterTable.fa);
@@ -110,7 +112,7 @@ end
     nTwoOptoTrials  = sum(masterTable.twoOptoTrial & ~masterTable.fa);
     nNoOptoTrials   = sum(masterTable.noOptoTrial & ~masterTable.fa);
     nTopUpTrials    = sum(masterTable.topUpTrial & ~masterTable.fa);
-
+    
     % Total Hits
     nV1Hits = sum(masterTable.v1Trial & masterTable.hit);
     nSCHits = sum(masterTable.scTrial & masterTable.hit);
@@ -118,13 +120,15 @@ end
     nNoOptoHits = sum(masterTable.noOptoTrial & masterTable.hit);
     nTopUpHits = sum(masterTable.topUpTrial & masterTable.hit);
 
-    % Compute pHit and CIs given alpha (CI)
+    % Compute pHit and CIs given alpha (CI) 
     [V1phat,V1pci] = binofit(nV1Hits,nV1Trials);
     [SCphat,SCpci] = binofit(nSCHits,nSCTrials);
     [twoOptophat,twoOptopci] = binofit(nTwoOptoHits,nTwoOptoTrials);
     [noOptophat,noOptopci] = binofit(nNoOptoHits,nNoOptoTrials);
     [topUpphat,topUppci] = binofit(nTopUpHits,nTopUpTrials);
 
+
+%% Plot Results For This Mouse
     locs = [1 2 3 4 5];
     perf = [noOptophat, V1phat, SCphat, twoOptophat, topUpphat];
 
@@ -158,4 +162,6 @@ end
 
     % Save Figure
     saveas(gcf, [strcat(filePath, 'Results/', animals{1,mouse},'.tif')]);
+end
+
 
