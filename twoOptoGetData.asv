@@ -4,7 +4,7 @@ addpath '/Users/jacksoncone/Documents/GitHub/TwoOpto';
 % Grab twoOpto Data and plot a heatmap of impairment by condition
 
 % List of Animals in the twoOpto GitHub Folder
-animals = {'2365','2394','2396', '2397','2401', '2452','2454','2456','2475','2485','2488', '2589'};
+animals = {'2365','2394','2396','2397','2401','2452','2453','2454','2456','2475','2476','2485','2487','2589'};
 
 % Set this to the location of the data files on your machine
 [~, name] = system('hostname');
@@ -80,52 +80,78 @@ for mouse = 1:length(twoOptoDir)
         RTs = [RTs, trials.reactTimeMS];
         contrast = [contrast, trials.contrastPC];
 
-
         % Get Stim Info for reach trial
         trialStruct = [trials(:).trial];
+        
+        % SetUp the outcomes indicies
+        indices.correct = outcomes == 0;
+        indices.early = outcomes == 1;
+        indices.fail = outcomes == 2;
+
+        % Fit Logistic Function to Response Time Distribution
+        % Reassign outcomes based on the fit.
+        [respLimitsMS, theIndices, ~, ~] = getResponseLimits(file, trials, indices);
+        
+        % Specs of the Augmented RT Window
+        startRT = respLimitsMS(1); endRT = respLimitsMS(2); RTWindowMS = diff(respLimitsMS);
+            
+        % Compute overall False Alarm Rate
+        rateEarly = earlyRate(file, trials, theIndices.correct, theIndices.fail, theIndices.early);
+        pFA = 1.0 - exp(-rateEarly * RTWindowMS / 1000.0);
 
         % Logical Indexes for Different Stimulus Conditions
-        noOptoIdx = [noOptoIdx, [trialStruct.opto0PowerMW] == 0 & [trialStruct.opto1PowerMW] == 0 & [trials(:).contrastPC] == 30];
-        v1StimIdx = [v1StimIdx, [trialStruct.opto0PowerMW] > 0 & [trialStruct.opto1PowerMW] == 0];
-        scStimIdx = [scStimIdx, [trialStruct.opto0PowerMW] == 0 & [trialStruct.opto1PowerMW] > 0];
-        twoOptoIdx = [twoOptoIdx, [trialStruct.opto0PowerMW] > 0 & [trialStruct.opto1PowerMW] > 0];
-        topUpIdx  = [topUpIdx, [trials(:).contrastPC] == 50];
+        noOptoIdx  = [trialStruct.opto0PowerMW] == 0 & [trialStruct.opto1PowerMW] == 0 & [trials(:).contrastPC] == 30;
+        v1StimIdx  = [trialStruct.opto0PowerMW] > 0 & [trialStruct.opto1PowerMW] == 0;
+        scStimIdx  = [trialStruct.opto0PowerMW] == 0 & [trialStruct.opto1PowerMW] > 0;
+        twoOptoIdx = [trialStruct.opto0PowerMW] > 0 & [trialStruct.opto1PowerMW] > 0;
+        topUpIdx   = [trials(:).contrastPC] == 50;
+    
+        % Total Trials
+        nNoOptoTrials   = sum(noOptoIdx & ~theIndices.early);
+        nV1Trials       = sum(v1StimIdx & ~theIndices.early);
+        nSCTrials       = sum(scStimIdx & ~theIndices.early);
+        nTwoOptoTrials  = sum(twoOptoIdx & ~theIndices.early);
+        nTopUpTrials    = sum(topUpIdx & ~theIndices.early);
+    
+        % Total Hits
+        nNoOptoHits  = sum(noOptoIdx & theIndices.correct);
+        nV1Hits      = sum(v1StimIdx & theIndices.correct);
+        nSCHits      = sum(scStimIdx & theIndices.correct);
+        nTwoOptoHits = sum(twoOptoIdx & theIndices.correct);
+        nTopUpHits   = sum(topUpIdx & theIndices.correct);
+
+         % Compute pHit and then correct for false hits
+         noOptoPHit  = nNoOptoHits/nNoOptoTrials;
+         noOptoPHit  = (noOptoPHit - pFA) / (1.0 - pFA);
+         v1pHit      = nV1Hits/nV1Trials;
+         v1pHit      = (v1pHit - pFA) / (1.0 - pFA);
+         scPHit      = nSCHits/nSCTrials;
+         scPHit      = (scPHit - pFA) / (1.0 - pFA);
+         twoOptoPHit = nTwoOptoHits/nTwoOptoTrials;
+         twoOptoPHit = (twoOptoPHit - pFA) / (1.0 - pFA);
+         topUpPHit   = nTopUpHits/nTopUpTrials;
+         topUpPHit   = (topUpPHit - pFA) / (1.0 - pFA);
+
+
+        % Compute d' and c.
+        [dP_noOpto, c_control] = dprime(pH, pFA, 'false');
+
+
 
     end
 
     % Clean Up
     clear trials stimDesc file dParams numSessions
 
-    % Get Outcomes and Filter
-    hit = outcomes == 0; fa = outcomes == 1; miss = outcomes == 2;
+
     
     %% Create a Master Table of all Trials
     masterTable = table(contrast', RTs', hit', miss', fa', noOptoIdx', v1StimIdx', scStimIdx', twoOptoIdx', topUpIdx');
     masterTable.Properties.VariableNames = {'contrastPC','RT','hit','miss','fa','noOptoTrial', 'v1Trial','scTrial', 'twoOptoTrial', 'topUpTrial'};
 
-    %% Compute Performance 
-    
+    %% Output a Struct
 
-    % Total Trials
-    nV1Trials       = sum(masterTable.v1Trial & ~masterTable.fa);
-    nSCTrials       = sum(masterTable.scTrial & ~masterTable.fa);
-    nTwoOptoTrials  = sum(masterTable.twoOptoTrial & ~masterTable.fa);
-    nNoOptoTrials   = sum(masterTable.noOptoTrial & ~masterTable.fa);
-    nTopUpTrials    = sum(masterTable.topUpTrial & ~masterTable.fa);
-    
-    % Total Hits
-    nV1Hits = sum(masterTable.v1Trial & masterTable.hit);
-    nSCHits = sum(masterTable.scTrial & masterTable.hit);
-    nTwoOptoHits = sum(masterTable.twoOptoTrial & masterTable.hit);
-    nNoOptoHits = sum(masterTable.noOptoTrial & masterTable.hit);
-    nTopUpHits = sum(masterTable.topUpTrial & masterTable.hit);
 
-    % Compute pHit and CIs given alpha (CI) 
-    [V1phat,V1pci] = binofit(nV1Hits,nV1Trials);
-    [SCphat,SCpci] = binofit(nSCHits,nSCTrials);
-    [twoOptophat,twoOptopci] = binofit(nTwoOptoHits,nTwoOptoTrials);
-    [noOptophat,noOptopci] = binofit(nNoOptoHits,nNoOptoTrials);
-    [topUpphat,topUppci] = binofit(nTopUpHits,nTopUpTrials);
 
 
 %% Plot Results For This Mouse
