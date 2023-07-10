@@ -95,10 +95,10 @@ for mouseNum = 1:nMice
     % CUSTOMIZE
     title(strcat('d-prime: Mouse:'," ", num2str(mice(1,mouseNum))));
     ax = gca; ax.FontSize = 14; ax.LineWidth = 1; ax.TickDir = 'out';
-    xlim([0.5 5.5]); ylim([0 3]);
-    ax.XTick = [1, 2, 3, 4, 5]; ax.YTick = [0, 1, 2, 3];
+    xlim([0.5 5.5]); ylim([0.5 3]);
+    ax.XTick = [1, 2, 3, 4, 5]; ax.YTick = [0.5, 1, 1.5, 2, 2.5, 3];
     ax.XTickLabel = {'control', 'V1', 'SC', 'V1+SC', 'Top Up'};
-    ax.YTickLabel =  {'0.00', '1.00', '2.00', '3.00'};
+    ax.YTickLabel =  {'0.50', '1.00', '1.50', '2.00', '2.50', '3.00'};
     xlabel('Stim Condition'); ylabel('d''');
     hold off;
     % Save Figure
@@ -124,10 +124,10 @@ for mouseNum = 1:nMice
     % CUSTOMIZE
     title(strcat('criterion: Mouse:'," ", num2str(mice(1,mouseNum))));
     ax = gca; ax.FontSize = 14; ax.LineWidth = 1; ax.TickDir = 'out';
-    xlim([0.5 5.5]); ylim([0 3]);
-    ax.XTick = [1, 2, 3, 4, 5]; ax.YTick = [0, 1, 2, 3];
+    xlim([0.5 5.5]); ylim([0 2]);
+    ax.XTick = [1, 2, 3, 4, 5]; ax.YTick = [0, 1, 2];
     ax.XTickLabel = {'control', 'V1', 'SC', 'V1+SC', 'Top Up'};
-    ax.YTickLabel =  {'0.00', '1.00', '2.00', '3.00'};
+    ax.YTickLabel =  {'0.00', '1.00', '2.00'};
     xlabel('Stim Condition'); ylabel('criterion');
     hold off;
     % Save Figure
@@ -207,13 +207,14 @@ for mouseNum = 1:nMice
     % CUSTOMIZE
     title(strcat('Delta d'': Mouse:'," ", num2str(mice(1,mouseNum))));
     ax = gca; ax.FontSize = 14; ax.LineWidth = 1; ax.TickDir = 'out';
-    xlim([0.5 3.5]); ylim([-2 1]);
-    ax.XTick = [1, 2, 3]; ax.YTick = [-2, -1.5, -1, -0.5, 0, 0.5, 1];
+    xlim([0.5 3.5]); ylim([-2 0.5]);
+    ax.XTick = [1, 2, 3]; ax.YTick = [-2, -1.5, -1, -0.5, 0, 0.5];
     ax.XTickLabel = {'V1', 'SC', 'V1+SC'};
-    ax.YTickLabel =  {'-2', '-1.5', '-1', '-0.5', '0.0', '0.5', '1.0'};
+    ax.YTickLabel =  {'-2', '-1.5', '-1', '-0.5', '0.0', '0.5'};
     xlabel('Stim Condition'); ylabel('Delta d''');
     hold off;
     % Save Figure
     saveas(gcf, [strcat(filePath,'Results/delta dPrime/',num2str(mice(1,mouseNum)),'.tif')]);
-
+    
+    close all % close all the figures
 end
