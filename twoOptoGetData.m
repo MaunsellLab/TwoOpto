@@ -1,10 +1,10 @@
-% twoOptoGetData
+function [masterStruct] = twoOptoGetData()
 
 addpath '/Users/jacksoncone/Documents/GitHub/TwoOpto';
 % Grab twoOpto Data and plot a heatmap of impairment by condition
 
 % List of Animals in the twoOpto GitHub Folder
-animals = {'2365','2394','2396', '2397','2401','2452','2453','2454','2456','2475','2476','2485','2487','2488','2589'};
+animals = {'2365','2394','2396','2397','2401','2452','2453','2454','2456','2475','2476','2485','2487','2589'};
 
 % Set this to the location of the data files on your machine
 [~, name] = system('hostname');
@@ -20,7 +20,9 @@ twoOptoDir = dir(filePath);
 % Filter Folders by the list of animals
 twoOptoDir = twoOptoDir(ismember({twoOptoDir.name}, animals));
 
-%% 
+% Init Master Struct
+rowCounter = 1;
+masterStruct = struct();
 
 %% Loop Through Mouse Folders
 for mouse = 1:length(twoOptoDir)
@@ -45,7 +47,10 @@ for mouse = 1:length(twoOptoDir)
     
     % Update the Mouse Directory with sessions that make the cut
     mouseDir = mouseDir(logical(idx));
-    %% Init 
+%% Extract Data from each session
+    
+for session = 1:numSessions
+    %% Init Variable Placeholders
     stimDesc = [];
     azimuths = [];
     elevations = [];
@@ -58,110 +63,145 @@ for mouse = 1:length(twoOptoDir)
     RTs = [];
     contrast = [];
 
-    for session = 1:numSessions
-        % Load Session MatFile
-        load(mouseDir(session).name);
+    load(mouseDir(session).name); % Load Session MatFile
 
-        % Sometimes github won't have todays data but the file exists.
-        if ~exist('trials')
-            continue
-        end
-
-        % Which Fields are present
-        f = fieldnames(trials);
-
-        if any(strcmp(f,'stimDesc')) % Not all files had the visual stim info
-            stimDesc = [trials.stimDesc];
-            azimuths = [azimuths, azimuths, stimDesc.azimuthDeg];
-            elevations = [elevations, stimDesc.elevationDeg];
-        end
-
-        outcomes = [outcomes, trials.trialEnd];
-        RTs = [RTs, trials.reactTimeMS];
-        contrast = [contrast, trials.contrastPC];
-
-
-        % Get Stim Info for reach trial
-        trialStruct = [trials(:).trial];
-
-        % Logical Indexes for Different Stimulus Conditions
-        noOptoIdx = [noOptoIdx, [trialStruct.opto0PowerMW] == 0 & [trialStruct.opto1PowerMW] == 0 & [trials(:).contrastPC] == 30];
-        v1StimIdx = [v1StimIdx, [trialStruct.opto0PowerMW] > 0 & [trialStruct.opto1PowerMW] == 0];
-        scStimIdx = [scStimIdx, [trialStruct.opto0PowerMW] == 0 & [trialStruct.opto1PowerMW] > 0];
-        twoOptoIdx = [twoOptoIdx, [trialStruct.opto0PowerMW] > 0 & [trialStruct.opto1PowerMW] > 0];
-        topUpIdx  = [topUpIdx, [trials(:).contrastPC] == 50];
-
+    % Sometimes github won't have todays data but the file exists. When
+    % this happens the file doesn't contain the 'trials' Struct. 
+    % Check and skip this day if so.
+    if ~exist('trials')
+        continue
     end
 
-    % Clean Up
-    clear trials stimDesc file dParams numSessions
+    f = fieldnames(trials); % Which Fields are present
 
-    % Get Outcomes and Filter
-    hit = outcomes == 0; fa = outcomes == 1; miss = outcomes == 2;
-    
-    %% Create a Master Table of all Trials
-    masterTable = table(contrast', RTs', hit', miss', fa', noOptoIdx', v1StimIdx', scStimIdx', twoOptoIdx', topUpIdx');
-    masterTable.Properties.VariableNames = {'contrastPC','RT','hit','miss','fa','noOptoTrial', 'v1Trial','scTrial', 'twoOptoTrial', 'topUpTrial'};
+    if any(strcmp(f,'stimDesc')) % Not all files had the visual stim info
+        stimDesc = [trials.stimDesc];
+        azimuths = [azimuths, azimuths, stimDesc.azimuthDeg];
+        elevations = [elevations, stimDesc.elevationDeg];
+    end
 
-    %% Compute Performance 
-    
+    outcomes = [outcomes, trials.trialEnd];
+    RTs = [RTs, trials.reactTimeMS];
+    contrast = [contrast, trials.contrastPC];
 
+    % Get Stim Info for reach trial
+    trialStruct = [trials(:).trial];
+
+    % SetUp the outcomes indicies
+    indices.correct = outcomes == 0;
+    indices.early = outcomes == 1;
+    indices.fail = outcomes == 2;
+
+    % Fit Logistic Function to Response Time Distribution
+    % Reassign outcomes based on the fit.
+    [respLimitsMS, theIndices, ~, ~] = getResponseLimits(file, trials, indices);
+
+    % Specs of the Augmented RT Window
+    startRT = respLimitsMS(1); endRT = respLimitsMS(2); RTWindowMS = diff(respLimitsMS);
+
+    % Compute overall False Alarm Rate
+    rateEarly = earlyRate(file, trials, theIndices.correct, theIndices.fail, theIndices.early);
+    pFA = 1.0 - exp(-rateEarly * RTWindowMS / 1000.0);
+
+    % RT Struct
+    reactionTimes.RTs        = RTs;
+    reactionTimes.startRT    = startRT;
+    reactionTimes.endRT      = endRT;
+    reactionTimes.RTWindowMS = RTWindowMS;
+
+    %% Logical Indexes for Different Stimulus Conditions
+    noOptoIdx  = [trialStruct.opto0PowerMW] == 0 & [trialStruct.opto1PowerMW] == 0 & [trials(:).contrastPC] == 30;
+    v1StimIdx  = [trialStruct.opto0PowerMW] > 0 & [trialStruct.opto1PowerMW] == 0;
+    scStimIdx  = [trialStruct.opto0PowerMW] == 0 & [trialStruct.opto1PowerMW] > 0;
+    twoOptoIdx = [trialStruct.opto0PowerMW] > 0 & [trialStruct.opto1PowerMW] > 0;
+    topUpIdx   = [trials(:).contrastPC] == 50;
+    % Append all indexes to a struct
+    logicals.noOpto = noOptoIdx;
+    logicals.v1Stim = v1StimIdx;
+    logicals.scStim = scStimIdx;
+    logicals.twoOpto = twoOptoIdx;
+    logicals.topUp = topUpIdx;
+
+    %% Trial Counts Appended to Struct
     % Total Trials
-    nV1Trials       = sum(masterTable.v1Trial & ~masterTable.fa);
-    nSCTrials       = sum(masterTable.scTrial & ~masterTable.fa);
-    nTwoOptoTrials  = sum(masterTable.twoOptoTrial & ~masterTable.fa);
-    nNoOptoTrials   = sum(masterTable.noOptoTrial & ~masterTable.fa);
-    nTopUpTrials    = sum(masterTable.topUpTrial & ~masterTable.fa);
+    trialCounts.noOpto = sum(noOptoIdx & ~theIndices.early);
+    trialCounts.V1 = sum(v1StimIdx & ~theIndices.early);
+    trialCounts.SC = sum(scStimIdx & ~theIndices.early);
+    trialCounts.twoOpto = sum(twoOptoIdx & ~theIndices.early);
+    trialCounts.topUp = sum(topUpIdx & ~theIndices.early);
+    % Hit Counts
+    hitCounts.noOpto = sum(noOptoIdx & theIndices.correct);
+    hitCounts.V1 = sum(v1StimIdx & theIndices.correct);
+    hitCounts.SC = sum(scStimIdx & theIndices.correct);
+    hitCounts.twoOpto = sum(twoOptoIdx & theIndices.correct);
+    hitCounts.topUp = sum(topUpIdx & theIndices.correct);
+
+    % Compute pHit and then correct for false hits
+    noOptoPHit  = hitCounts.noOpto/trialCounts.noOpto; 
+    noOptoPHit  = (noOptoPHit - pFA) / (1.0 - pFA);
+    v1PHit      = hitCounts.V1/trialCounts.V1; 
+    v1PHit = (v1PHit - pFA) / (1.0 - pFA);
+    scPHit      = hitCounts.SC/trialCounts.SC; 
+    scPHit = (scPHit - pFA) / (1.0 - pFA);
+    twoOptoPHit = hitCounts.twoOpto/trialCounts.twoOpto; 
+    twoOptoPHit = (twoOptoPHit - pFA) / (1.0 - pFA);
+    topUpPHit   = hitCounts.topUp/trialCounts.topUp; 
+    topUpPHit = (topUpPHit - pFA) / (1.0 - pFA);
+    % Output to Struct
+    hitRate.noOpto = noOptoPHit; hitRate.V1 = v1PHit;
+    hitRate.SC = scPHit; hitRate.twoOpto = twoOptoPHit;
+    hitRate.topUp = topUpPHit;
+
+    % Compute d' and c.
+    [dP_noOpto, c_noOpto]   = dprime(noOptoPHit, pFA, true);
+    [dP_V1stim, c_V1stim]   = dprime(v1PHit, pFA, true);
+    [dP_SCstim, c_SCstim]   = dprime(scPHit, pFA, true);
+    [dP_twoOpto, c_twoOpto] = dprime(twoOptoPHit, pFA, true);
+    [dP_topUp, c_topUp]     = dprime(topUpPHit, pFA, true);
+
+    % output to struct
+    dPrimes.noOpto = dP_noOpto; dPrimes.V1 = dP_V1stim;
+    dPrimes.SC = dP_SCstim; dPrimes.twoOpto = dP_twoOpto;
+    dPrimes.topUp = dP_topUp;
+    criterions.noOpto = c_noOpto; criterions.V1 = c_V1stim;
+    criterions.SC = c_SCstim; criterions.twoOpto = c_twoOpto;
+    criterions.topUp = c_topUp; 
+
+    % Lapse Rate Based on Top Up Performance
+    lapseRate = 1-(hitCounts.topUp/trialCounts.topUp);
+
+    %% Output Session Data to Struct
+   
+    % Mouse and Session Info
+    masterStruct(rowCounter).mouse = animals{1,mouse};
+    masterStruct(rowCounter).date = mouseDir(session).name(1:10);
+    % Delta d'
+    masterStruct(rowCounter).v1DeltaDp = dP_V1stim - dP_noOpto;
+    masterStruct(rowCounter).scDeltaDp = dP_SCstim - dP_noOpto;
+    masterStruct(rowCounter).twoOptoDeltaDp = dP_twoOpto - dP_noOpto; 
+    % d-Primes
+    masterStruct(rowCounter).dPrimes = dPrimes;
+    % Criterions
+    masterStruct(rowCounter).criterions = criterions;
+    % Hit Rates
+    masterStruct(rowCounter).hitRates = hitRate;
+    % number of trials in each stimulus condition
+    masterStruct(rowCounter).trialCounts = trialCounts;
+    % number of hits in each stimulus condition
+    masterStruct(rowCounter).hitCounts = hitCounts;
+    % Session Info
+    masterStruct(rowCounter).outcomes = theIndices;
+    masterStruct(rowCounter).visualStimPC = contrast;
+    masterStruct(rowCounter).reactionTimes = reactionTimes;
+    masterStruct(rowCounter).faRate = pFA;
+    masterStruct(rowCounter).lapseRate = lapseRate;
+    masterStruct(rowCounter).trialTypes = logicals;
     
-    % Total Hits
-    nV1Hits = sum(masterTable.v1Trial & masterTable.hit);
-    nSCHits = sum(masterTable.scTrial & masterTable.hit);
-    nTwoOptoHits = sum(masterTable.twoOptoTrial & masterTable.hit);
-    nNoOptoHits = sum(masterTable.noOptoTrial & masterTable.hit);
-    nTopUpHits = sum(masterTable.topUpTrial & masterTable.hit);
+% Go to Next Session, but first increment the counter
+rowCounter = rowCounter+1;
+clear trials stimDesc file dParam
+end
 
-    % Compute pHit and CIs given alpha (CI) 
-    [V1phat,V1pci] = binofit(nV1Hits,nV1Trials);
-    [SCphat,SCpci] = binofit(nSCHits,nSCTrials);
-    [twoOptophat,twoOptopci] = binofit(nTwoOptoHits,nTwoOptoTrials);
-    [noOptophat,noOptopci] = binofit(nNoOptoHits,nNoOptoTrials);
-    [topUpphat,topUppci] = binofit(nTopUpHits,nTopUpTrials);
-
-
-%% Plot Results For This Mouse
-    locs = [1 2 3 4 5];
-    perf = [noOptophat, V1phat, SCphat, twoOptophat, topUpphat];
-
-    % Plot Summary Results
-    figure('Position', [10 10 500 500]);
-    hold on;
-    axis square;
-    scatter(locs,perf, 75,'black','filled');
-    % Add CIs
-    plot([1 1], [noOptopci(1) noOptopci(2)], 'Color', 'k', 'LineWidth',1);
-    plot([2 2], [V1pci(1) V1pci(2)], 'Color', 'k', 'LineWidth',1);
-    plot([3 3], [SCpci(1) SCpci(2)], 'Color', 'k', 'LineWidth',1);
-    plot([4 4], [twoOptopci(1) twoOptopci(2)], 'Color', 'k', 'LineWidth',1);
-    plot([5 5], [topUppci(1) topUppci(2)], 'Color', 'k', 'LineWidth',1);
-    % CUSTOMMIZE
-    title(strcat('Hit Rate: Mouse'," ", animals{1,mouse}));
-    ax = gca;
-    ax.FontSize = 14;
-    ax.LineWidth = 1;
-    xlim([0.5 5.5]);
-    ylim([0 1]);
-    ax.TickDir = 'out';
-    ax.TickDir = 'out';
-    ax.XTick = [1, 2, 3, 4, 5];
-    ax.XTickLabel = {'control', 'V1', 'SC', 'V1+SC', 'Top Up'};
-    ax.YTick = [0, 0.25, 0.5, 0.75, 1.0];
-    ax.YTickLabel =  {'0.00', '0.25', '0.50', '0.75', '1.00'};
-    xlabel('Stim Condition');
-    ylabel('Proportion Correct');
-    hold off;
-
-    % Save Figure
-    saveas(gcf, [strcat(filePath, 'Results/', animals{1,mouse},'.tif')]);
 end
 
 
