@@ -1,10 +1,7 @@
 function twoOptoPlots(lapseCut,faCut)
 
-% Inputs
-% LapseCut [range: 0-1]: If lapse rate on topUp > lapseCut, the session is
-% dropped from analysis
-% faCut [range: 0-1]: If the estimate false alarm rate > faCut, the session is
-% dropped from analysis
+% LapseCut [range: 0-1]. If t
+
 
 [~, name] = system('hostname');
 name = lower(name);
