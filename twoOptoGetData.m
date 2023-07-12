@@ -4,7 +4,9 @@ addpath '/Users/jacksoncone/Documents/GitHub/TwoOpto';
 % Grab twoOpto Data and plot a heatmap of impairment by condition
 
 % List of Animals in the twoOpto GitHub Folder
-animals = {'2365','2394','2396','2397','2401','2452','2453','2454','2456','2475','2476','2485','2487','2589'};
+animals = {'2365','2394','2396','2397',...
+    '2401','2452','2453','2454','2456','2475','2476','2485','2487',...
+    '2588','2589'};
 
 % Set this to the location of the data files on your machine
 [~, name] = system('hostname');
