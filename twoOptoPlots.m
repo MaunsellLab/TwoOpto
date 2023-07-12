@@ -1,5 +1,11 @@
 function twoOptoPlots(lapseCut,faCut)
 
+% Inputs
+% LapseCut [range: 0-1]: If lapse rate on topUp > lapseCut, the session is
+% dropped from analysis
+% faCut [range: 0-1]: If the estimate false alarm rate > faCut, the session is
+% dropped from analysis
+
 [~, name] = system('hostname');
 name = lower(name);
 if contains(name, 'nrb')
@@ -26,7 +32,7 @@ for mouseNum = 1:nMice
     % Sub-Select Table for this mouse
     U = masterStruct(1,idx);
     % Sub-Select Table based on False Alarm and lapse Cuts specified below
-    subIdx = [U.faRate] < faCut & [U.lapseRate] < lapseCut;
+    subIdx = [U.faRate] <= faCut & [U.lapseRate] <= lapseCut;
     U = U(1,subIdx);
     % How Many Sessions Survived the cuts
     numSessions = length(U);
@@ -124,10 +130,10 @@ for mouseNum = 1:nMice
     % CUSTOMIZE
     title(strcat('criterion: Mouse:'," ", num2str(mice(1,mouseNum))));
     ax = gca; ax.FontSize = 14; ax.LineWidth = 1; ax.TickDir = 'out';
-    xlim([0.5 5.5]); ylim([0 2]);
-    ax.XTick = [1, 2, 3, 4, 5]; ax.YTick = [0, 1, 2];
+    xlim([0.5 5.5]); ylim([0.4 1.6]);
+    ax.XTick = [1, 2, 3, 4, 5]; ax.YTick = [0.5, 1.0, 1.5];
     ax.XTickLabel = {'control', 'V1', 'SC', 'V1+SC', 'Top Up'};
-    ax.YTickLabel =  {'0.00', '1.00', '2.00'};
+    ax.YTickLabel =  {'0.50', '1.00', '1.50'};
     xlabel('Stim Condition'); ylabel('criterion');
     hold off;
     % Save Figure
@@ -182,10 +188,10 @@ for mouseNum = 1:nMice
     % CUSTOMIZE
     title(strcat('Reaction Times: Mouse:'," ", num2str(mice(1,mouseNum))));
     ax = gca; ax.FontSize = 14; ax.LineWidth = 1; ax.TickDir = 'out';
-    xlim([0.5 5.5]); ylim([150 400]);
-    ax.XTick = [1, 2, 3, 4, 5]; ax.YTick = [150, 200, 250, 300, 350, 400];
+    xlim([0.5 5.5]); ylim([175 350]);
+    ax.XTick = [1, 2, 3, 4, 5]; ax.YTick = [200, 250, 300, 350];
     ax.XTickLabel = {'control', 'V1', 'SC', 'V1+SC', 'Top Up'};
-    ax.YTickLabel =  {'150', '200', '250', '300', '350', '400'};
+    ax.YTickLabel =  {'200', '250', '300', '350'};
     xlabel('Stim Condition'); ylabel('Reaction Time (ms)');
     hold off;
     % Save Figure
