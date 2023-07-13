@@ -19,6 +19,12 @@ pV1 = signrank([dPrimes(:).V1],[dPrimes(:).noOpto]);
 pSC = signrank([dPrimes(:).SC],[dPrimes(:).noOpto]);
 pTO = signrank([dPrimes(:).twoOpto],[dPrimes(:).noOpto]);
 
+% Medians
+V1Med = nanmedian([dPrimes(:).V1]);
+SCMed = nanmedian([dPrimes(:).SC]);
+noOptoMed = nanmedian([dPrimes(:).noOpto]);
+twoOptoMed = nanmedian([dPrimes(:).twoOpto]);
+
 %% V1 d' for stim versus unstim
 figure;
 scatter([dPrimes(:).noOpto],[dPrimes(:).V1], 30, 'filled', 'MarkerFaceColor', 'k');
