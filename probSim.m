@@ -38,7 +38,6 @@
 % degrees of perturbation strength.
 
 % We observe delta hit rate/delta d' for s0, s1, and s0+s1
-
 %% Get Actual Performance Values
 [masterStruct] = twoOptoGetData();
 dPrimes = [masterStruct.dPrimes];
@@ -46,6 +45,42 @@ control = [dPrimes(:).noOpto];
 V1d = [dPrimes(:).V1];
 SCd = [dPrimes(:).SC];
 twoOpto = [dPrimes(:).twoOpto];
+
+% Observed Delta d'
+deltaD_ob = twoOpto-control; % twoOpto Condition
+deltaD_V1 = V1d - control; % V1 stimulation
+deltaD_SC = SCd - control; % SC stimulation
+
+% delta
+deltaD_predSS = deltaD_V1 + deltaD_SC;
+
+%deltaD_predPS 
+
+%% Scatter Plot of Observed vs. Predicted
+
+MSE_SS = nansum(((deltaD_ob - deltaD_predSS).^2)/length(deltaD_ob));
+
+figure;
+hold on;
+axis square;
+scatter(deltaD_ob,deltaD_predSS, 30, 'k', 'filled');
+plot([-2.5 1.5], [-2.5 1.5], 'LineStyle', '--', 'Color', 'r'); % Unity Line
+xlabel('delta d'' Observed'); ylabel('delta d'' Predicted');
+xlim([-2.5 1.5]); ylim([-2.5 1.5]);
+set(gca, 'FontSize', 14); set(gca, 'TickDir', 'out');
+title('Signal Summation');
+set(gca, 'XTick', [-2 -1 0 1]); set(gca, 'YTick', [-2 -1 0 1]); 
+set(gca, 'XTickLabel', {'-2', '-1', '0', '1'});
+set(gca, 'YTickLabel', {'-2', '-1', '0', '1'});
+text(-2, 1, sprintf('MSE = %0.2f', MSE_SS), 'FontSize', 14);
+hold off;
+
+
+
+
+
+
+
 %% Probability Summation Model
 
 % According to signal summation, the observed d' corresponds to:
@@ -95,6 +130,7 @@ view(315,45); hold off;
 
 % In probability summation model
 % d' = max(d'(V1), d'(SC))
+
 
 
 
