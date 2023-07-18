@@ -38,7 +38,6 @@
 % degrees of perturbation strength.
 
 % We observe delta hit rate/delta d' for s0, s1, and s0+s1
-
 %% Get Actual Performance Values
 [masterStruct] = twoOptoGetData();
 dPrimes = [masterStruct.dPrimes];
@@ -46,6 +45,74 @@ control = [dPrimes(:).noOpto];
 V1d = [dPrimes(:).V1];
 SCd = [dPrimes(:).SC];
 twoOpto = [dPrimes(:).twoOpto];
+
+% Observed Delta d'
+deltaD_ob = twoOpto-control; % twoOpto Condition
+deltaD_V1 = V1d - control; % V1 stimulation
+deltaD_SC = SCd - control; % SC stimulation
+
+% delta
+deltaD_predSS = deltaD_V1 + deltaD_SC;
+
+% deltaD_predPS 
+% This is a little more complicated
+% if both negative, take the max (the less negative Delta d')
+% if both positive, take the max (the more positive)
+% if V1 is negative and SC postive, take V1
+% if SC is negative, and V1 positive, take SC
+
+deltaD_predPS = zeros(1,length(masterStruct));
+for i = 1:length(masterStruct)
+    if deltaD_V1(1,i) <= 0 && deltaD_SC(1,i) <= 0
+        deltaD_predPS(1,i) = max(deltaD_V1(1,i), deltaD_SC(1,i));
+    elseif deltaD_V1(1,i) >= 0 && deltaD_SC(1,i) >= 0
+        deltaD_predPS(1,i) = max(deltaD_V1(1,i), deltaD_SC(1,i));
+    elseif deltaD_V1(1,i) < 0 && deltaD_SC(1,i) >= 0
+        deltaD_predPS(1,i) = deltaD_SC(1,i);
+    elseif deltaD_V1(1,i) >= 0 && deltaD_SC(1,i) < 0
+        deltaD_predPS(1,i) = deltaD_V1(1,i);
+    else
+        deltaD_predPS(1,i) = NaN;
+    end
+end
+
+%% Scatter Plot of Observed vs. Predicted
+
+figure('Position',[10 10 1000 500]);
+subplot(1,2,1);
+% Mean Absolute Deviation
+MAD_SS = nansum(abs(deltaD_ob - deltaD_predSS))/length(deltaD_ob); %#ok<NANSUM> 
+hold on;
+axis square;
+scatter(deltaD_ob,deltaD_predSS, 30, 'k', 'filled');
+plot([-2.5 1.5], [-2.5 1.5], 'LineStyle', '--', 'Color', 'r'); % Unity Line
+xlabel('delta d'' Observed'); ylabel('delta d'' Predicted');
+xlim([-2.5 1.5]); ylim([-2.5 1.5]);
+set(gca, 'FontSize', 14); set(gca, 'TickDir', 'out');
+title('Signal Summation');
+set(gca, 'XTick', [-2 -1 0 1]); set(gca, 'YTick', [-2 -1 0 1]); 
+set(gca, 'XTickLabel', {'-2', '-1', '0', '1'});
+set(gca, 'YTickLabel', {'-2', '-1', '0', '1'});
+text(-2, 1, sprintf('MAD = %0.3f', MAD_SS), 'FontSize', 14);
+hold off;
+
+subplot(1,2,2);
+% Mean Absolute Deviation
+MAD_PS = nansum(abs(deltaD_ob - deltaD_predPS))/length(deltaD_ob); %#ok<NANSUM> 
+hold on;
+axis square;
+scatter(deltaD_ob,deltaD_predPS, 30, 'k', 'filled');
+plot([-2.5 1.5], [-2.5 1.5], 'LineStyle', '--', 'Color', 'r'); % Unity Line
+xlabel('delta d'' Observed'); ylabel('delta d'' Predicted');
+xlim([-2.5 1.5]); ylim([-2.5 1.5]);
+set(gca, 'FontSize', 14); set(gca, 'TickDir', 'out');
+title('Probability Summation');
+set(gca, 'XTick', [-2 -1 0 1]); set(gca, 'YTick', [-2 -1 0 1]); 
+set(gca, 'XTickLabel', {'-2', '-1', '0', '1'});
+set(gca, 'YTickLabel', {'-2', '-1', '0', '1'});
+text(-2, 1, sprintf('MAD = %0.3f', MAD_PS), 'FontSize', 14);
+hold off;
+
 %% Probability Summation Model
 
 % According to signal summation, the observed d' corresponds to:
@@ -95,6 +162,7 @@ view(315,45); hold off;
 
 % In probability summation model
 % d' = max(d'(V1), d'(SC))
+
 
 
 
