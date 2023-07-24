@@ -74,6 +74,12 @@ for session = 1:numSessions
         continue
     end
 
+    % Occassionally, trials will have been created by it's only 1 trials
+    % long, that's not a session
+    if length(trials) < 2
+        continue
+    end
+
     f = fieldnames(trials); % Which Fields are present
 
     if any(strcmp(f,'stimDesc')) % Not all files had the visual stim info
