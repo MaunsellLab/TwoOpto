@@ -105,3 +105,12 @@ for mouseNum = 1:nMice
     [mouseP(1,mouseNum),tbl, stats] = friedman(d1,1);
     multi{1,mouseNum} = multcompare(stats);
 end
+
+%% Session Counts
+
+sessionCounts = zeros(1,length(mice));
+
+for i = 1:length(mice)
+    sessionCounts(1,i) = sum(mouseNumbers == mice(1,i));
+end
+
