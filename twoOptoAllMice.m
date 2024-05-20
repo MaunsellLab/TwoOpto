@@ -159,5 +159,5 @@ end
     hold off;
 
     % Save Figure
-    saveas(gcf, [strcat(filePath, 'Results/', animals{1,mouse},'.tif')]);
+    saveas(gcf, [strcat(filePath, 'Results/', 'all mice','.tif')]);
 

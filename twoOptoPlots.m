@@ -100,12 +100,12 @@ for mouseNum = 1:nMice
     plot([5 5], [perf(5)-topUpSEM perf(5)+topUpSEM], 'Color', 'k', 'LineWidth',1);
     % CUSTOMIZE
     title(strcat('d-prime: Mouse:'," ", num2str(mice(1,mouseNum))));
-    ax = gca; ax.FontSize = 14; ax.LineWidth = 1; ax.TickDir = 'out';
+    ax = gca; ax.FontSize = 16; ax.LineWidth = 1; ax.TickDir = 'out';
     xlim([0.5 5.5]); ylim([0.5 3]);
     ax.XTick = [1, 2, 3, 4, 5]; ax.YTick = [0.5, 1, 1.5, 2, 2.5, 3];
     ax.XTickLabel = {'control', 'V1', 'SC', 'V1+SC', 'Top Up'};
     ax.YTickLabel =  {'0.50', '1.00', '1.50', '2.00', '2.50', '3.00'};
-    xlabel('Stim Condition'); ylabel('d''');
+    xlabel('Stimulation Condition'); ylabel('d''');
     hold off;
     % Save Figure
     saveas(gcf, [strcat(filePath,'Results/dPrime/',num2str(mice(1,mouseNum)),'.tif')]);
@@ -129,12 +129,12 @@ for mouseNum = 1:nMice
     plot([5 5], [perf(5)-topUpSEM perf(5)+topUpSEM], 'Color', 'k', 'LineWidth',1);
     % CUSTOMIZE
     title(strcat('criterion: Mouse:'," ", num2str(mice(1,mouseNum))));
-    ax = gca; ax.FontSize = 14; ax.LineWidth = 1; ax.TickDir = 'out';
+    ax = gca; ax.FontSize = 16; ax.LineWidth = 1; ax.TickDir = 'out';
     xlim([0.5 5.5]); ylim([0.4 1.6]);
     ax.XTick = [1, 2, 3, 4, 5]; ax.YTick = [0.5, 1.0, 1.5];
     ax.XTickLabel = {'control', 'V1', 'SC', 'V1+SC', 'Top Up'};
     ax.YTickLabel =  {'0.50', '1.00', '1.50'};
-    xlabel('Stim Condition'); ylabel('criterion');
+    xlabel('Stimulation Condition'); ylabel('criterion');
     hold off;
     % Save Figure
     saveas(gcf, [strcat(filePath,'Results/criterion/',num2str(mice(1,mouseNum)),'.tif')]);
@@ -158,12 +158,12 @@ for mouseNum = 1:nMice
     plot([5 5], [perf(5)-topUpSEM perf(5)+topUpSEM], 'Color', 'k', 'LineWidth',1);
     % CUSTOMIZE
     title(strcat('hit Rate: Mouse:'," ", num2str(mice(1,mouseNum))));
-    ax = gca; ax.FontSize = 14; ax.LineWidth = 1; ax.TickDir = 'out';
+    ax = gca; ax.FontSize = 16; ax.LineWidth = 1; ax.TickDir = 'out';
     xlim([0.5 5.5]); ylim([0 1]);
     ax.XTick = [1, 2, 3, 4, 5]; ax.YTick = [0, 0.25 0.5 0.75 1.0];
     ax.XTickLabel = {'control', 'V1', 'SC', 'V1+SC', 'Top Up'};
     ax.YTickLabel =  {'0.00', '0.25', '0.50', '0.75', '1.00'};
-    xlabel('Stim Condition'); ylabel('Hit Rate');
+    xlabel('Stimulation Condition'); ylabel('Hit Rate');
     hold off;
     % Save Figure
     saveas(gcf, [strcat(filePath,'Results/hitRate/',num2str(mice(1,mouseNum)),'.tif')]);
@@ -187,12 +187,12 @@ for mouseNum = 1:nMice
     plot([5 5], [perf(5)-topUpSEM perf(5)+topUpSEM], 'Color', 'k', 'LineWidth',1);
     % CUSTOMIZE
     title(strcat('Reaction Times: Mouse:'," ", num2str(mice(1,mouseNum))));
-    ax = gca; ax.FontSize = 14; ax.LineWidth = 1; ax.TickDir = 'out';
+    ax = gca; ax.FontSize = 16; ax.LineWidth = 1; ax.TickDir = 'out';
     xlim([0.5 5.5]); ylim([175 350]);
     ax.XTick = [1, 2, 3, 4, 5]; ax.YTick = [200, 250, 300, 350];
     ax.XTickLabel = {'control', 'V1', 'SC', 'V1+SC', 'Top Up'};
     ax.YTickLabel =  {'200', '250', '300', '350'};
-    xlabel('Stim Condition'); ylabel('Reaction Time (ms)');
+    xlabel('Stimulation Condition'); ylabel('Reaction Time (ms)');
     hold off;
     % Save Figure
     saveas(gcf, [strcat(filePath,'Results/RTs/',num2str(mice(1,mouseNum)),'.tif')]);
@@ -212,12 +212,12 @@ for mouseNum = 1:nMice
     plot([3 3], [perf(3)-twoOptoSEM perf(3)+twoOptoSEM], 'Color', 'k', 'LineWidth',1);
     % CUSTOMIZE
     title(strcat('Delta d'': Mouse:'," ", num2str(mice(1,mouseNum))));
-    ax = gca; ax.FontSize = 14; ax.LineWidth = 1; ax.TickDir = 'out';
+    ax = gca; ax.FontSize = 16; ax.LineWidth = 1; ax.TickDir = 'out';
     xlim([0.5 3.5]); ylim([-2 0.5]);
     ax.XTick = [1, 2, 3]; ax.YTick = [-2, -1.5, -1, -0.5, 0, 0.5];
     ax.XTickLabel = {'V1', 'SC', 'V1+SC'};
     ax.YTickLabel =  {'-2', '-1.5', '-1', '-0.5', '0.0', '0.5'};
-    xlabel('Stim Condition'); ylabel('Delta d''');
+    xlabel('Stimulation Condition'); ylabel('Delta d''');
     hold off;
     % Save Figure
     saveas(gcf, [strcat(filePath,'Results/delta dPrime/',num2str(mice(1,mouseNum)),'.tif')]);
