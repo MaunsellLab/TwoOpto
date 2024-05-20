@@ -1,9 +1,11 @@
+function [] = twoOptoAllMice(dataCode)
+
 % two opto all mice
 addpath '/Users/jacksoncone/Documents/GitHub/TwoOpto';
 % Grab twoOpto Data and plot a heatmap of impairment by condition
 
-% List of Animals in the twoOpto GitHub Folder
-%animals = {'2339','2365','2394','2396','2401','2454','2456','2475','2488'};
+% List of Animals For Summary
+[animals] = mouseList(dataCode);
 
 % Set this to the location of the data files on your machine
 [~, name] = system('hostname');
