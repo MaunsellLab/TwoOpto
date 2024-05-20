@@ -1,4 +1,4 @@
-function twoOptoPlots(lapseCut,faCut)
+function twoOptoPlots(lapseCut,faCut, dataCode)
 
 % Inputs
 % LapseCut [range: 0-1]: If lapse rate on topUp > lapseCut, the session is
@@ -15,7 +15,7 @@ else
 end
 
 % Generate Master Struct
-[masterStruct] = twoOptoGetData();
+[masterStruct] = twoOptoGetData(dataCode);
 
 % Number of unique mice
 mouseList = zeros(1,length(masterStruct));

@@ -1,7 +1,9 @@
 % Two Opto Scatter Plots
 
+% Call twoOptoGetData() First
+
 % Get All Data
-[masterStruct] = twoOptoGetData();
+% [masterStruct] = twoOptoGetData();
 
 % Extract dPrimes Struct
 dPrimes = [masterStruct.dPrimes];
@@ -33,12 +35,14 @@ hold on;
 set(gca, 'TickDir', 'out');
 set(gca, 'FontSize', 14);
 set(gca, 'LineWidth',1);
-xlim([0 3.5]);
-ylim([0 3.5]);
-plot([0 3.5],[0 3.5],'LineStyle', '--', 'Color', 'r');
+xlim([0 3.1]);
+ylim([0 3.1]);
+plot([0 3.1],[0 3.1],'LineStyle', '--', 'Color', 'r');
+text(0.52, 2.25, sprintf('p < %0.3f', pV1), 'Color','red','FontSize',12);
 title('dPrime: control vs. V1');
-xlabel('d'' control');
-ylabel('d'' V1');
+xlabel('d'' V1 control');
+ylabel('d'' V1 inhibited');
+grid on;
 hold off;
 %% SC d' for stim versus unstim
 figure;
@@ -48,12 +52,14 @@ hold on;
 set(gca, 'TickDir', 'out');
 set(gca, 'FontSize', 14);
 set(gca, 'LineWidth',1);
-xlim([0 3.5]);
-ylim([0 3.5]);
-plot([0 3.5],[0 3.5],'LineStyle', '--', 'Color', 'r');
+xlim([0 3.1]);
+ylim([0 3.1]);
+plot([0 3.1],[0 3.1],'LineStyle', '--', 'Color', 'r');
+text(0.52, 2.25, sprintf('p < %0.3f', pSC), 'Color','red','FontSize',12);
 title('dPrime: control vs. SC');
-xlabel('d'' control');
-ylabel('d'' SC');
+xlabel('d'' SC control');
+ylabel('d'' SC inhibited');
+grid on;
 hold off;
 %% SC delta d' vs. V1 delta d'
 scatter(v1,sc, 30, 'filled', 'MarkerFaceColor', 'k');

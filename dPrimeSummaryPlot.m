@@ -1,7 +1,7 @@
 % PerfPlot
 
 % Plots the d' for each stimulation condition in Gigi's experiment
-[masterStruct] = twoOptoGetData();
+% [masterStruct] = twoOptoGetData();
 nSessions = length(masterStruct);
 
 % Get d'
@@ -72,9 +72,6 @@ plot([mean_tO mean_tO],[mean_tO-sem_tO mean_tO+sem_tO],...
     'LineStyle','-', 'Color', 'red', 'LineWidth', 1);
 
 legend('','','','','control', 'V1', 'SC', 'Both', 'location', 'northeast');
-
-
-
 
 
 xlabel('V1 d''');

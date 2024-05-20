@@ -39,7 +39,7 @@
 
 % We observe delta hit rate/delta d' for s0, s1, and s0+s1
 %% Get Actual Performance Values
-[masterStruct] = twoOptoGetData();
+[masterStruct] = twoOptoGetData(1);
 dPrimes = [masterStruct.dPrimes];
 control = [dPrimes(:).noOpto];
 V1d = [dPrimes(:).V1];
