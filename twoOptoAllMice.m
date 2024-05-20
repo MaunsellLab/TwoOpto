@@ -141,7 +141,7 @@ end
     plot([3 3], [SCpci(1) SCpci(2)], 'Color', 'k', 'LineWidth',1);
     plot([4 4], [twoOptopci(1) twoOptopci(2)], 'Color', 'k', 'LineWidth',1);
     plot([5 5], [topUppci(1) topUppci(2)], 'Color', 'k', 'LineWidth',1);
-    % CUSTOMMIZE
+    % CUSTOMIZE
     title(strcat('Hit Rate: Mouse'," ", animals{1,mouse}));
     ax = gca;
     ax.FontSize = 14;

@@ -1,5 +1,5 @@
 function dPrimeIsopleth(dataCode)
-% PerfPlot
+% Plots an Isopleth of d' for SC or V1 inhibition as well as SC+V1 inhib
 
 [masterStruct] = twoOptoGetData(dataCode);
 

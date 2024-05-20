@@ -1,3 +1,4 @@
+function trialCounts(dataCode)
 % twoOpto TrialCounts
 
 [~, name] = system('hostname');
@@ -9,7 +10,7 @@ else
 end
 
 % Generate Master Struct
-[masterStruct] = twoOptoGetData();
+[masterStruct] = twoOptoGetData(dataCode);
 
 % Number of unique mice
 mouseList = zeros(1,length(masterStruct));
@@ -67,14 +68,14 @@ plot([3 3], [meanSCd-semSCd meanSCd+semSCd], 'Color', 'k', 'LineWidth',1);
 plot([4 4], [meanTwoOptod-semTwoOptod meanTwoOptod+semTwoOptod], 'Color', 'k', 'LineWidth',1);
 xlabel('Stimulation Condition');
 ylabel('d''');
-title('Average d'' Across All Animals');
+title('Average d'' n = 8 mice');
 set(gca, 'TickDir', 'out');
 set(gca, 'FontSize', 14);
 set(gca, 'LineWidth',1);
 xlim([0.5 4.5]);
-ylim([1.25 2]);
-set(gca, 'XTick', [1 2 3 4]);
-set(gca, 'YTick', [1.25 1.5 1.75, 2.0]);
+ylim([1.1 1.9]);
+set(gca, 'XTick', [1 2 3 4 5]);
+set(gca, 'YTick', [1.25, 1.5, 1.75]);
 set(gca,'XTickLabel', {'control', 'V1', 'SC', 'V1+SC', 'Top Up'});
 hold off;
 
