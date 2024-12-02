@@ -143,16 +143,33 @@ for session = 1:numSessions
     hitCounts.topUp = sum(topUpIdx & theIndices.correct);
 
     % Compute pHit and then correct for false hits
+    % if correction puts pHit < 0, force to 0 since we can't have negative
+    % hit rates
     noOptoPHit  = hitCounts.noOpto/trialCounts.noOpto; 
     noOptoPHit  = (noOptoPHit - pFA) / (1.0 - pFA);
+    if noOptoPHit < 0
+        noOptoPHit = 0;
+    end
     v1PHit      = hitCounts.V1/trialCounts.V1; 
     v1PHit = (v1PHit - pFA) / (1.0 - pFA);
+    if v1PHit < 0
+        v1PHit = 0;
+    end
     scPHit      = hitCounts.SC/trialCounts.SC; 
     scPHit = (scPHit - pFA) / (1.0 - pFA);
+    if scPHit < 0
+        scPHit = 0;
+    end
     twoOptoPHit = hitCounts.twoOpto/trialCounts.twoOpto; 
     twoOptoPHit = (twoOptoPHit - pFA) / (1.0 - pFA);
+    if twoOptoPHit < 0
+        twoOptoPHit = 0;
+    end
     topUpPHit   = hitCounts.topUp/trialCounts.topUp; 
     topUpPHit = (topUpPHit - pFA) / (1.0 - pFA);
+    if topUpPHit < 0
+        topUpPHit = 0;
+    end
     % Output to Struct
     hitRate.noOpto = noOptoPHit; hitRate.V1 = v1PHit;
     hitRate.SC = scPHit; hitRate.twoOpto = twoOptoPHit;
@@ -182,9 +199,21 @@ for session = 1:numSessions
     masterStruct(rowCounter).mouse = animals{1,mouse};
     masterStruct(rowCounter).date = mouseDir(session).name(1:10);
     % Delta d'
-    masterStruct(rowCounter).v1DeltaDp = dP_V1stim - dP_noOpto;
-    masterStruct(rowCounter).scDeltaDp = dP_SCstim - dP_noOpto;
-    masterStruct(rowCounter).twoOptoDeltaDp = dP_twoOpto - dP_noOpto; 
+    if hitRate.V1 == 0
+        masterStruct(rowCounter).v1DeltaDp = -1*dP_noOpto;
+    else
+        masterStruct(rowCounter).v1DeltaDp = dP_V1stim - dP_noOpto;
+    end
+    if hitRate.SC == 0
+        masterStruct(rowCounter).scDeltaDp = -1*dP_noOpto;
+    else
+        masterStruct(rowCounter).scDeltaDp = dP_SCstim - dP_noOpto;
+    end
+    if hitRate.twoOpto == 0 % mouse got 0 hits when for dual site inhibition
+        masterStruct(rowCounter).twoOptoDeltaDp = -1*dP_noOpto; 
+    else  
+        masterStruct(rowCounter).twoOptoDeltaDp = dP_twoOpto - dP_noOpto; 
+    end
     % d-Primes
     masterStruct(rowCounter).dPrimes = dPrimes;
     % Criterions
