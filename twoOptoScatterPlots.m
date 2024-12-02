@@ -75,6 +75,12 @@ title('Delta dPrime: V1 vs. SC');
 xlabel('delta d'' V1');
 ylabel('delta d'' SC');
 hold off;
+
+%% Correlation of v1 and sc effects 
+
+mdl = fitlm(table(v1(~isnan(v1) & ~isnan(sc))',sc(~isnan(v1) & ~isnan(sc))')) 
+
+
 %% Two Opto Delta d' versus sc + v1 delta d'
 scatter(p,pO, 30, 'filled', 'MarkerFaceColor', 'k');
 axis square;
@@ -89,3 +95,10 @@ title('Delta dPrime: Two Opto');
 xlabel('delta d'': deltaV1 + deltaSC');
 ylabel('Observed delta d'': two Opto');
 hold off;
+
+
+
+    
+
+
+
