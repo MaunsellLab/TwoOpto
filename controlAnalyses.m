@@ -1,0 +1,431 @@
+% twoOpto Control Figures
+% plots and analyzes data from mice with poor/no expression
+%% Get Data
+[masterStruct] = twoOptoGetData(4); % dataCode = 4 is control mice 
+%% nMice
+nSessions = length(masterStruct); % total Sessions
+mouseList = zeros(nSessions,1); 
+for session = 1:nSessions
+    mouseList(session,1) = str2double(masterStruct(session).mouse);
+end
+nMice = length(unique(mouseList)); % unique mice
+mice  = unique(mouseList);
+sessionCounts = zeros(nMice,1);
+for mouseNum = 1:nMice % Sessions per mouse
+    sessionCounts(mouseNum,1) = sum(mouseList == mice(mouseNum));
+end
+clear mouseNum session;
+%% Trial Counts
+counts = [masterStruct(:).trialCounts];
+nSessions = length(masterStruct);
+nTwoOptoTrials  = sum([counts(:).twoOpto]);
+nControlTrials  = sum([counts(:).noOpto]);
+nV1Trials       = sum([counts(:).V1]);
+nSCTrials       = sum([counts(:).SC]);
+nTopUpTrials    = sum([counts(:).topUp]);
+%% Delta d-prime
+v1DeltaDp = [masterStruct(:).v1DeltaDp];
+scDeltaDp = [masterStruct(:).scDeltaDp];
+toDeltaDp = [masterStruct(:).scDeltaDp];
+%% dPrimes
+dPrimes = [masterStruct(:).dPrimes];
+% Means
+meanControld = nanmean([dPrimes(:).noOpto]); %#ok<*NANMEAN>
+meanV1d      = nanmean([dPrimes(:).V1]);
+meanSCd      = nanmean([dPrimes(:).SC]);
+meanTwoOptod = nanmean([dPrimes(:).twoOpto]);
+% SEM
+semControld = nanstd([dPrimes(:).noOpto])/sqrt(nSessions); %#ok<*NANSTD>
+semV1d      = nanstd([dPrimes(:).V1])/sqrt(nSessions);
+semSCd      = nanstd([dPrimes(:).SC])/sqrt(nSessions);
+semTwoOptod = nanstd([dPrimes(:).twoOpto])/sqrt(nSessions);
+
+% Test for significant Effects
+pV1 = signrank([dPrimes(:).noOpto],[dPrimes(:).V1]);
+pSC = signrank([dPrimes(:).SC],[dPrimes(:).noOpto]);
+pTO = signrank([dPrimes(:).twoOpto],[dPrimes(:).noOpto]);
+
+% Medians
+V1Med = nanmedian([dPrimes(:).V1]); %#ok<*NANMEDIAN>
+SCMed = nanmedian([dPrimes(:).SC]);
+noOptoMed = nanmedian([dPrimes(:).noOpto]);
+twoOptoMed = nanmedian([dPrimes(:).twoOpto]);
+%% Criterions
+criterions = [masterStruct(:).criterions];
+% Means
+meanControlC = nanmean([criterions(:).noOpto]); %#ok<*NANMEAN>
+meanV1C      = nanmean([criterions(:).V1]);
+meanSCC      = nanmean([criterions(:).SC]);
+meanTwoOptoC = nanmean([criterions(:).twoOpto]);
+% SEM
+semControlC = nanstd([criterions(:).noOpto])/sqrt(nSessions); %#ok<*NANSTD>
+semV1C      = nanstd([criterions(:).V1])/sqrt(nSessions);
+semSCC      = nanstd([criterions(:).SC])/sqrt(nSessions);
+semTwoOptoC = nanstd([criterions(:).twoOpto])/sqrt(nSessions);
+%% False Alarm Rate Distribution
+faRates      = [masterStruct(:).faRate];
+faRateMedian = median(faRates);
+faRateIQR    = prctile(faRates,[25 75]); 
+% plot distribution
+edges = 0:0.01:0.15;
+figure; hold on; axis square;
+histogram(faRates, edges, 'FaceColor', 'w');
+yl = ylim(); xlim([0 0.15]);
+plot([faRateMedian faRateMedian], [yl(1) yl(2)], 'Color', 'k', 'LineStyle','--');
+title('False Alarm Rate'); xlabel('False Alarm Rate'); ylabel('counts');
+set(gca, 'TickDir','out', 'FontSize', 14); box off;
+hold off;
+%% Scatter Plots for d-prime
+% Control Versus V1
+figure('Position',[10 10 1000 1000]);
+subplot(2,2,1); axis square;
+scatter([dPrimes(:).V1], [dPrimes(:).noOpto], 30, 'filled', 'MarkerFaceColor','k'); hold on;
+plot([0, 3], [0, 3], 'Color', 'k', 'LineStyle','--', 'LineWidth',0.5);
+ylabel('d'' Control'); xlabel('d'' V1 Inhibition');
+xlim([0 3]); ylim([0 3]); set(gca, 'TickDir', 'out');
+xticks([0 1 2 3]); yticks([0 1 2 3]);
+title('Control versus V1 inhibition');
+set(gca, 'FontSize', 16); box off; hold off;
+
+% Control Versus SC
+subplot(2,2,2); axis square;
+scatter([dPrimes(:).SC], [dPrimes(:).noOpto], 30, 'filled', 'MarkerFaceColor','k'); hold on;
+plot([0, 3], [0, 3], 'Color', 'k', 'LineStyle','--', 'LineWidth',0.5);
+ylabel('d'' Control'); xlabel('d'' SC Inhibition');
+xlim([0 3]); ylim([0 3]); set(gca, 'TickDir', 'out');
+xticks([0 1 2 3]); yticks([0 1 2 3]);
+title('Control versus SC inhibition');
+set(gca, 'FontSize', 16); box off; hold off;
+
+% V1 Versus Dual Site
+subplot(2,2,3); axis square;
+scatter([dPrimes(:).V1],[dPrimes(:).twoOpto], 30, 'filled', 'MarkerFaceColor','k'); hold on;
+plot([0, 3], [0, 3], 'Color', 'k', 'LineStyle','--', 'LineWidth',0.5);
+xlabel('d'' V1 Inhibition'); ylabel('d'' V1+SC Inhibition');
+xlim([0 3]); ylim([0 3]); set(gca, 'TickDir', 'out');
+xticks([0 1 2 3]); yticks([0 1 2 3]);
+title('V1 inhibition versus Dual Site Inhibition');
+set(gca, 'FontSize', 16); box off; hold off;
+
+% SC Versus Dual Site
+subplot(2,2,4); axis square;
+scatter([dPrimes(:).SC], [dPrimes(:).twoOpto], 30, 'filled', 'MarkerFaceColor','k'); hold on;
+plot([0, 3], [0, 3], 'Color', 'k', 'LineStyle','--', 'LineWidth',0.5);
+xlabel('d'' SC Inhibition'); ylabel('d'' SC+V1 Inhibition');
+xlim([0 3]); ylim([0 3]); set(gca, 'TickDir', 'out');
+xticks([0 1 2 3]); yticks([0 1 2 3]);
+title('SC inhibition versus Dual Site Inhibition');
+set(gca, 'FontSize', 16); box off; hold off;
+%% Plot d-prime by condition for each session and/or mouse
+d_control = [dPrimes(:).noOpto];
+d_v1      = [dPrimes(:).V1];
+d_sc      = [dPrimes(:).SC];
+d_to      = [dPrimes(:).twoOpto];
+mouseMeans = zeros(1,nMice);
+mouseSEM   = zeros(1,nMice);
+
+% mouse means
+for mouseNum = 1:nMice
+    mouseIdx = strcmp({masterStruct.mouse},num2str(mice(mouseNum)));
+    mouseMeans(1,mouseNum) = nanmean(d_control(1,mouseIdx)); %#ok<*NANMEAN>
+    mouseMeans(2,mouseNum) = nanmean(d_v1(1,mouseIdx));
+    mouseMeans(3,mouseNum) = nanmean(d_sc(1,mouseIdx));
+    mouseMeans(4,mouseNum) = nanmean(d_to(1,mouseIdx));
+    mouseSEM(1,mouseNum)   = nanstd(d_control(1,mouseIdx))./sqrt(sum(mouseIdx)); %#ok<*NANSTD>
+    mouseSEM(2,mouseNum)   = nanstd(d_v1(1,mouseIdx))./sqrt(sum(mouseIdx));
+    mouseSEM(3,mouseNum)   = nanstd(d_sc(1,mouseIdx))./sqrt(sum(mouseIdx));
+    mouseSEM(4,mouseNum)   = nanstd(d_to(1,mouseIdx))./sqrt(sum(mouseIdx));
+end
+
+% Organize Subplot
+if nMice > 6 & nMice <= 9 
+    rows = 3;
+    cols = 3;
+elseif nMice <= 6
+    rows = 2;
+    cols = 3;
+else 
+    rows = 4;
+    cols = 3;
+end
+
+figure('Position',[10 10 1500 1500]); 
+for mouseNum = 1:length(mice)
+    mouseIdx = strcmp({masterStruct.mouse},num2str(mice(mouseNum)));
+    dP_mouse = dP(mouseIdx,:);
+    nObservations = size(dP_mouse,1);
+    nConditions = size(dP_mouse,2);
+    x = 1:nConditions;
+    colors = lines(nObservations);
+    subplot(rows,cols,mouseNum);
+    hold on; axis square;
+    % Loop over each observation (row) and plot connected lines
+    for i = 1:nObservations
+        plot(x, dP_mouse(i, :), '-o', 'LineWidth',...
+            1.5, 'MarkerSize', 10, 'MarkerFaceColor', colors(i,:),...
+            'Color', colors(i,:));  % Plot each row as a line with points (circles)
+        ylim([-0.5 3]);
+        yticks([0 1 2 3]);
+    end
+    xlim([0.5 nConditions+0.5]); xticks(1:nConditions);
+    xticks([1 2 3 4]);
+    set(gca, 'TickDir', 'out'); set(gca, 'FontSize', 16);
+    xticklabels({'Control', 'V1 Inhib.', 'SC Inhib.', 'V1+SC Inhib.'}); % Label each column
+    ylabel('d'''); xlabel('Condition'); title(sprintf('Mouse # %s', num2str(mice(mouseNum)))); hold off;
+end
+
+%% Similar Plot But Mean Trace of Each Mouse
+figure('Position',[10 10 700 500]); 
+hold on; axis square;
+
+colors = lines(length(mice)); % One color per mouse
+x = 1:size(dP,2); % Number of conditions
+
+for mouseNum = 1:length(mice)
+    mouseIdx = strcmp({masterStruct.mouse}, num2str(mice(mouseNum)));
+    dP_mouse = dP(mouseIdx,:);  % All sessions for this mouse
+    mean_dP = mean(dP_mouse, 1);  % Mean across sessions
+    plot(x, mean_dP, '-o', 'LineWidth', 2, ...
+        'MarkerSize', 10, 'MarkerFaceColor', colors(mouseNum,:), ...
+        'Color', colors(mouseNum,:));
+end
+
+ylim([-0.5 3]);
+yticks([0 1 2 3]);
+xlim([0.5 length(x)+0.5]);
+xticks(1:length(x));
+xticklabels({'Control', 'V1 Inhib.', 'SC Inhib.', 'V1+SC Inhib.'});
+set(gca, 'TickDir', 'out'); 
+set(gca, 'FontSize', 16);
+ylabel('d'''); 
+xlabel('Condition'); 
+legend(arrayfun(@(m) sprintf('%s', num2str(m)), mice, 'UniformOutput', false), 'Location','southwest');
+title('Mean d'' Across Sessions for Each Mouse');
+hold off;
+
+%% Show Error for each mouse
+
+figure('Position',[10 10 700 500]); 
+hold on; axis square;
+
+colors = lines(length(mice)); % One color per mouse
+x = 1:size(dP,2); % Number of conditions
+
+for mouseNum = 1:length(mice)
+    mouseIdx = strcmp({masterStruct.mouse}, num2str(mice(mouseNum)));
+    dP_mouse = dP(mouseIdx,:);  % All sessions for this mouse
+    mean_dP = mean(dP_mouse, 1);  % Mean across sessions
+    sem_dP = std(dP_mouse, [], 1) / sqrt(size(dP_mouse,1));  % SEM
+
+    % Shaded error area
+    fill([x, fliplr(x)], ...
+         [mean_dP + sem_dP, fliplr(mean_dP - sem_dP)], ...
+         colors(mouseNum,:), ...
+         'FaceAlpha', 0.2, 'EdgeColor', 'none', 'HandleVisibility', 'off');
+
+    % Mean line
+    plot(x, mean_dP, '-o', 'LineWidth', 2, ...
+        'MarkerSize', 10, 'MarkerFaceColor', colors(mouseNum,:), ...
+        'Color', colors(mouseNum,:));
+end
+
+ylim([-0.5 3]);
+yticks([0 1 2 3]);
+xlim([0.5 length(x)+0.5]);
+xticks(1:length(x));
+xticklabels({'Control', 'V1 Inhib.', 'SC Inhib.', 'V1+SC Inhib.'});
+set(gca, 'TickDir', 'out'); 
+set(gca, 'FontSize', 16);
+ylabel('d'''); 
+xlabel('Condition'); 
+legend(arrayfun(@(m) sprintf(num2str(m)), mice, 'UniformOutput', false), 'Location', 'southwest');
+title('Mean ± SEM d'' Across Sessions for Each Mouse');
+hold off;
+
+
+%% Plot of d-prime by Condition
+figure;
+axis square;
+hold on;
+scatter([1 2 3 4], [meanControld,meanV1d,meanSCd,meanTwoOptod], 50, 'k', 'filled');
+plot([1 1], [meanControld-semControld meanControld+semControld], 'Color', 'k', 'LineWidth',1);
+plot([2 2], [meanV1d-semV1d meanV1d+semV1d], 'Color', 'k', 'LineWidth',1);
+plot([3 3], [meanSCd-semSCd meanSCd+semSCd], 'Color', 'k', 'LineWidth',1);
+plot([4 4], [meanTwoOptod-semTwoOptod meanTwoOptod+semTwoOptod], 'Color', 'k', 'LineWidth',1);
+xlabel('Stimulation Condition');
+ylabel('d''');
+title(sprintf('Average d'' n = %i mice', nMice));
+set(gca, 'TickDir', 'out');
+set(gca, 'FontSize', 16);
+set(gca, 'LineWidth',1);
+xlim([0.5 4.5]);
+ylim([1.0 2.0]);
+set(gca, 'XTick', [1 2 3 4 5]);
+set(gca, 'YTick', [1.0, 1.5, 2.0]);
+set(gca,'XTickLabel', {'Control', 'V1', 'SC', 'V1+SC', 'Top Up'});
+hold off;
+
+% statistics
+d = table2array(struct2table(dPrimes));
+d = d(:,1:end-1); % drop topUp
+% Drop rows with Nans
+d(any(isnan(d),2),:) = [];
+
+% Are variances equal? If not, use non-parametric Test
+pVarD = vartestn(d);
+
+if pVarD < 0.05
+    % Non-Parametric One Way ANOVA
+    [p,tbl,stats] = friedman(d,1);
+    [~,m,h,gnames] = multcompare(stats, 'Display','on'); % Post Hoc Test
+else
+    T = array2table(d, 'VariableNames', {'Control', 'V1', 'SC', 'TO'});
+    T.Session = (1:106)';
+    T = movevars(T, 'Session', 'Before', 1);
+    rm = fitrm(T, 'Control-TO ~ 1', 'WithinDesign', table([1 2 3 4]', ...
+        'VariableNames', {'Condition'}));
+    ranovatbl_D = ranova(rm);
+    posthoc_D = multcompare(rm, 'Condition', 'ComparisonType', 'tukey');
+end
+%% Plot of Criterion By Condition
+figure;
+axis square;
+hold on;
+scatter([1 2 3 4], [meanControlC,meanV1C,meanSCC,meanTwoOptoC], 50, 'k', 'filled');
+plot([1 1], [meanControlC-semControlC meanControlC+semControlC], 'Color', 'k', 'LineWidth',1);
+plot([2 2], [meanV1C-semV1C meanV1C+semV1C], 'Color', 'k', 'LineWidth',1);
+plot([3 3], [meanSCC-semSCC meanSCC+semSCC], 'Color', 'k', 'LineWidth',1);
+plot([4 4], [meanTwoOptoC-semTwoOptoC meanTwoOptoC+semTwoOptoC], 'Color', 'k', 'LineWidth',1);
+xlabel('Stimulation Condition');
+ylabel('Criterions');
+title(sprintf('Average d'' n = %i mice', nMice));
+set(gca, 'TickDir', 'out');
+set(gca, 'FontSize', 16);
+set(gca, 'LineWidth',1);
+xlim([0.5 4.5]);
+ylim([0.7 1.0]);
+set(gca, 'XTick', [1 2 3 4 5]);
+set(gca, 'YTick', [0.7, 0.8, 0.9, 1.0]);
+set(gca,'XTickLabel', {'Control', 'V1', 'SC', 'V1+SC', 'Top Up'});
+hold off;
+
+% statistics
+c = table2array(struct2table(criterions));
+c = c(:,1:end-1); % drop topUp
+c(any(isnan(c),2),:) = []; % Drop rows with Nans
+
+% Are variances equal? If not, use non-parametric Test
+pVarC = vartestn(c);
+
+if pVarC < 0.05
+    % Non-Parametric One Way ANOVA
+    [p,tbl,stats] = friedman(c,1);
+    [~,m,h,gnames] = multcompare(stats, 'Display','on'); % Post Hoc Test
+else
+    T = array2table(c, 'VariableNames', {'Control', 'V1', 'SC', 'TO'});
+    T.Session = (1:106)';
+    T = movevars(T, 'Session', 'Before', 1);
+    rm = fitrm(T, 'Control-TO ~ 1', 'WithinDesign', table([1 2 3 4]', ...
+        'VariableNames', {'Condition'}));
+    ranovatbl_C = ranova(rm);
+    posthoc_C = multcompare(rm, 'Condition', 'ComparisonType', 'tukey');
+end
+%% Scatter Plot of criterion by condition
+% Scatter Plots
+limits = [0 2];
+% Control Versus V1
+figure('Position',[10 10 1000 1000]);
+subplot(2,2,1); axis square;
+scatter([criterions(:).V1], [criterions(:).noOpto], 30, 'filled', 'MarkerFaceColor','k'); hold on;
+plot([0, 3], [0, 3], 'Color', 'k', 'LineStyle','--', 'LineWidth',0.5);
+ylabel('criterion: Control'); xlabel('criterion: V1 Inhibition');
+xlim(limits); ylim(limits); set(gca, 'TickDir', 'out');
+xticks([0 1 2 3]); yticks([0 1 2 3]);
+title('Control versus V1 inhibition');
+set(gca, 'FontSize', 16); box off; hold off;
+
+% Control Versus SC
+subplot(2,2,2); axis square;
+scatter([criterions(:).SC], [criterions(:).noOpto], 30, 'filled', 'MarkerFaceColor','k'); hold on;
+plot([0, 3], [0, 3], 'Color', 'k', 'LineStyle','--', 'LineWidth',0.5);
+ylabel('criterion: Control'); xlabel('criterion: SC Inhibition');
+xlim(limits); ylim(limits); set(gca, 'TickDir', 'out');
+xticks([0 1 2 3]); yticks([0 1 2 3]);
+title('Control versus SC inhibition');
+set(gca, 'FontSize', 16); box off; hold off;
+
+% V1 Versus Dual Site
+subplot(2,2,3); axis square;
+scatter([criterions(:).V1], [criterions(:).twoOpto], 30, 'filled', 'MarkerFaceColor','k'); hold on;
+plot([0, 3], [0, 3], 'Color', 'k', 'LineStyle','--', 'LineWidth',0.5);
+xlabel('criterion: V1 Inhibition'); ylabel('criterion: V1+SC Inhibition');
+xlim(limits); ylim(limits); set(gca, 'TickDir', 'out');
+xticks([0 1 2 3]); yticks([0 1 2 3]);
+title('V1 inhibition versus Dual Site Inhibition');
+set(gca, 'FontSize', 16); box off; hold off;
+
+% SC Versus Dual Site
+subplot(2,2,4); axis square;
+scatter([criterions(:).SC], [criterions(:).twoOpto], 30, 'filled', 'MarkerFaceColor','k'); hold on;
+plot([0, 3], [0, 3], 'Color', 'k', 'LineStyle','--', 'LineWidth',0.5);
+xlabel('criterion: SC Inhibition'); ylabel('criterion: SC+V1 Inhibition');
+xlim(limits); ylim(limits); set(gca, 'TickDir', 'out');
+xticks([0 1 2 3]); yticks([0 1 2 3]);
+title('SC inhibition versus Dual Site Inhibition');
+set(gca, 'FontSize', 16); box off; hold off;
+%% Distribution of d' on Top-Up
+d = table2array(struct2table(dPrimes));
+topUp = d(:,end); % keep only topUp
+topUp(any(isnan(topUp),1),:) = []; % Drop rows with Nans
+topUpIQR = prctile(topUp, [25 75]);
+topUpMedian = median(topUp);
+% plot distribution
+edges = 0:0.20:3;
+figure; hold on; axis square;
+histogram(topUp, edges, 'FaceColor', 'w');
+yl = ylim(); xlim([1 3]);
+plot([topUpMedian topUpMedian], [yl(1) yl(2)], 'Color', 'k', 'LineStyle','--');
+title('Top Up d'''); xlabel('d'''); ylabel('counts');
+set(gca, 'TickDir','out', 'FontSize', 14); box off;
+hold off;
+%% Lapse Rate Distribution - skip this, TopUp d-prime is more informative
+lapseRates      = [masterStruct(:).lapseRate];
+lapseRateMedian = median(lapseRates);
+lapseRateIQR    = prctile(lapseRates,[25 75]); 
+% plot distribution
+edges = 0:0.04:0.5;
+figure; hold on; axis square;
+histogram(lapseRates, edges, 'FaceColor', 'w');
+yl = ylim(); xlim([0 0.6]);
+plot([lapseRateMedian lapseRateMedian], [yl(1) yl(2)], 'Color', 'k', 'LineStyle','--');
+title('Lapse Rate'); xlabel('Lapse Rate'); ylabel('counts');
+set(gca, 'TickDir','out', 'FontSize', 14); box off;
+hold off;
+%% Powers Used
+v1Powers = [];
+scPowers = [];
+
+for sessionNum = 1:nSessions
+    temp1                  = unique(masterStruct(sessionNum).V1Power);  
+    temp2                  = unique(masterStruct(sessionNum).SCPower);  
+    temp1                  = temp1(temp1~=0); 
+    temp2                  = temp2(temp2~=0);
+    
+    for i = 1:length(temp1)
+        v1Powers = [v1Powers, temp1(i)]; %#ok<AGROW>
+    end
+    for j = 1:length(temp2)
+        scPowers = [scPowers, temp2(j)]; %#ok<AGROW>
+    end
+
+end
+clear temp1 temp2 sessionNum
+
+minSC = min(scPowers);
+maxSC = max(scPowers);
+minV1 = min(v1Powers);
+maxV1 = max(v1Powers);
+modeV1 = mode(v1Powers);
+modeSC = mode(scPowers);
+v1PowerIQR = prctile(v1Powers,[25 75]);
+scPowerIQR = prctile(scPowers,[25 75]);

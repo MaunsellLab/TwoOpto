@@ -5,6 +5,7 @@ scd = 0:0.01:3;
 nPoints = length(v1d);
 sumModel = zeros(nPoints,nPoints);
 maxModel = zeros(nPoints,nPoints);
+rng(10);
 
 %% Example Distributions for one point
 
@@ -60,6 +61,13 @@ yticks([0, 0.05, 0.1, 0.15, 0.2]); box off;
 xlabel('Combined Signal'); ylabel('Probability'); title('Max Model'); 
 hold off;
 
+%% Means of the Distributions
+
+max_mu = mean(max(v1Samps,scSamps));
+sum_mu = mean(v1Samps+scSamps);
+v1_mu  = mean(v1Samps);
+sc_mu  = mean(scSamps);
+
 %% Model all V1,SC combos
 % Fill Out Sum and Max Model With Identical Samples
 nSamps = 10000;
@@ -68,7 +76,6 @@ for i = 1:nPoints
         v1Samps = normrnd(v1d(i),1,[1, nSamps]);
         scSamps = normrnd(scd(j),1,[1, nSamps]);
         maxModel(i,j) = mean(max(v1Samps,scSamps));
-        % sumModel(i,j) = v1d(i)+scd(j);
         sumModel(i,j) = mean(v1Samps)+mean(scSamps); 
     end
 end
@@ -95,11 +102,6 @@ deltaDpV1_sem   = round(nanstd(data.v1StimDp - data.noStimDp)/sqrt(height(data)-
 deltaDpSC_sem   = round(nanstd(data.scStimDp - data.noStimDp)/sqrt(height(data)-1),2);
 deltaDpboth_sem = round(nanstd(data.obStimDp - data.noStimDp)/sqrt(height(data)-1),2);
 
-
-%% Make Plot
-% Dashed Lines Connect identical predicted d'
-% Change this to a region for a single example
-
 %% Find Example Valid Region
 
 % Steps To Plotting Valid Area
@@ -108,43 +110,91 @@ deltaDpboth_sem = round(nanstd(data.obStimDp - data.noStimDp)/sqrt(height(data)-
 % 3 - Exclude columns where dP_mu + deltaDpSC_mu < 0 
 % 4 - Plot a dashed white circle around those points.
 
+%  Sum Model: Valid Rows and Columns for the observed control d'
+[r1s, c1s] = find(round(sumModel,1) == round(dP_mu,1)); % indexes of sum locs that match observed d'
+% Find Values where the observed delta d' keeps the V1/SC d' > 0
+% Assumes that d' from each area was positive, otherwise inhibiting that
+% structure would improve the observed d'
+validSum = [(v1d(r1s) + round(deltaDpV1_mu,1) > 0)',...
+    (scd(c1s) + round(deltaDpSC_mu,1) > 0)'];
+% Only locations where both SC/V1 > 0 are valid
+validSumIdx = validSum(:,1) & validSum(:,2);
+% Filter the valid locations 
+% Remaining are Valid Starting Rows/Cols based on observed control d'
+r1s = r1s(validSumIdx); c1s = c1s(validSumIdx);
+
+% For Predictions shift all the valid locations by the observed delta d'
+predSum = [(v1d(r1s) + deltaDpV1_mu)',...
+    (scd(c1s) + deltaDpSC_mu)'];
+
+% Predicted Performance of Each Valid Start Point
+predPerfSum = mean(predSum(:,1) + predSum(:,2));
+
+% find x,y locations of the valid predictions
+[r1s_Pred, c1s_Pred] = find(round(sumModel,2) == round(predPerfSum,2)); % indexes of sum locs that match observed d'
 
 
-[r1s, c1s] = find(round(sumModel,1) == round(dP_mu,1));
-[r1m, c1m] = find(round(maxModel,1) == round(dP_mu,1));
-[X, Y] = meshgrid(v1d, scd); % Replace xVector and yVector with your x and y axis vectors
-
-
-
-% Find indices where Z approximately equals the desired value
-tolerance = 0.01; % Allow for some tolerance in the Z value
-indicesSum = abs(round(sumModel,1) - round(dP_mu,1)) < tolerance;
-% Get the x, y values where Z is approximately the specified value
-xRange = X(indicesSum);
-yRange = Y(indicesSum);
 
 
 
 
 
+% for development
+validLocsSum  = [r1s, c1s];
+validDSum     = [v1d(r1s)', scd(c1s)'];
+
+% Now Label Predicted End Locations Given the Average Shifts
+% Predicted d' = dP_mu + (deltaDpV1_mu + deltaDpSC_mu) 
+predPerfSum = dP_mu + (deltaDpV1_mu + deltaDpSC_mu); 
+
+bool = zeros(length(validLocsSum),1);
+for i = 1:length(validLocsSum)
+    bool(i) = round(sumModel(validLocsSum(i,1),validLocsSum(i,2))...
+            + (deltaDpV1_mu + deltaDpSC_mu),1) == 1.20;
+end
+bool = logical(bool);
+sum(bool)
+
+validLocsSum(bool,:)
+
+% All Valid Predicted Values Regardless of start location
+[r1s_Pred, c1s_Pred] = find(round(sumModel,1) == round(predPerfSum,1)); % indexes of sum locs that match observed d'
+% Filter preds to only come from valid starts
+
+% Observed Average Shift = dPboth_mu
+[r1s_Obs, c1s_Obs] = find(round(sumModel,2) == round(dPboth_mu,2)); % indexes of sum locs that match observed d'
+
+
+%% Plot!
 
 figure('Position',[10,10,2000,800]);
 subplot(1,2,1); 
 pcolor(sumModel); 
 shading interp; hold on;
-plot([find(v1d==max(xRange)),0], [0, find(scd==max(yRange))], 'w--', 'LineWidth', 2);
+% Plot Valid Starting Points
+plot(r1s, c1s, 'LineStyle',':', 'LineWidth',1.5, 'Color', 'w');
+% Plot Predicted Ending Points
+plot(r1s_Pred, c1s_Pred, 'LineStyle',':', 'LineWidth',2.5, 'Color', 'r');
+% Plot Observed Ending Points
+plot(r1s_Obs, c1s_Obs, 'LineStyle',':', 'LineWidth',2.5, 'Color', 'm');
 xlabel('V1 d'''); ylabel('SC d'''); zlabel('Predicted d''');
 xticks([0, 100, 200, 300]); xticklabels({'0', '1', '2', '3'});
 yticks([0, 100, 200, 300]); yticklabels({'0', '1', '2', '3'});
 title('Sum Model'); colorbar; colormap turbo; axis square;
 set(gca, 'TickDir', 'out', 'FontSize', 16);
 xlim([0,301]); ylim([0,301]); box off;
-%zlim([0 6]); clim([0 6]);
 hold off;
+
+
+
+%%
+% Max Model
+[r1m, c1m] = find(round(maxModel,1) == round(dP_mu,1)); % indexes of max locs that match observed d'
+
 
 subplot(1,2,2); hold on;
 surf(round(maxModel,1), 'EdgeColor','interp','FaceAlpha', 0.8); 
-plot(r1m, c1m, 'LineStyle','--', 'LineWidth',1, 'Color', 'k');
+plot(r1m, c1m, 'LineStyle','--', 'LineWidth',1, 'Color', 'w');
 xlabel('V1 d'''); ylabel('SC d'''); zlabel('Predicted d''');
 xticks([0, 100, 200, 300]); xticklabels({'0', '1', '2', '3'});
 yticks([0, 100, 200, 300]); yticklabels({'0', '1', '2', '3'});
@@ -155,8 +205,13 @@ xlim([0,301]); ylim([0,301]); zlim([0 6]); clim([0 6]);
 hold off;
 
 
+%%
 
 
+% % Find indices where Z approximately equals the desired value
+% tolerance = 0.01; % Allow for some tolerance in the Z value
+% indicesSum = abs(round(sumModel,1) - round(dP_mu,1)) < tolerance;
+% [X, Y] = meshgrid(v1d, scd); % May not be needed
 
 
 

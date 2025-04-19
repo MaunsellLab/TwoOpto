@@ -10,15 +10,19 @@ function [animals] = mouseList(dataCode)
 
 if dataCode == 1 % SC/V1
     animals = {'2365','2401','2452', '2454','2456',...
-        '2475','2476','2485','2588','2590'};
+        '2476','2485','2588','2590'};
 elseif dataCode == 2 % SC Only 
-    animals = {'2623'};
+    animals = {'2623', '2475'};
 elseif dataCode == 3 % V1 Only
     animals = {'2401','2452'};
 elseif dataCode == 4 % Controls
-    animals = {'2396','2397','2453','2487','2589','2623'};
-elseif dataCode == 5
+    animals = {'2396','2397','2453','2475', '2487','2589','2623'};
+elseif dataCode == 5 % all mice
     animals = {'2365','2396','2397',...
         '2401','2452','2453','2454','2456','2475','2476','2485','2487',...
         '2588','2589', '2590', '2623'};
+elseif dataCode == 6 % misaligned controls all mice
+    animals = {'2365','2396','2397',...
+        '2401','2452','2453','2454','2456','2475','2476','2485',...
+         '2588', '2590', '2623'};
 end

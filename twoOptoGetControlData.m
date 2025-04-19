@@ -1,4 +1,4 @@
-function [masterStruct] = twoOptoGetData(dataCode)
+function [masterStruct] = twoOptoGetControlData(dataCode)
 
 addpath '/Users/jacksoncone/Documents/GitHub/TwoOpto';
 % Grab twoOpto Data and plot a heatmap of impairment by condition
@@ -26,7 +26,7 @@ masterStruct = struct();
 
 %% Loop Through Mouse Folders
 for mouse = 1:length(twoOptoDir)
-    cd(strcat(filePath,twoOptoDir(mouse).name,'/','MatFiles/'));
+    cd(strcat(filePath,twoOptoDir(mouse).name,'/','misaligned','/','MatFiles/'));
     % How Many Sessions for This Mouse?
     mouseDir = dir('**/*.mat');
     numSessions = length(mouseDir);
@@ -51,19 +51,18 @@ for mouse = 1:length(twoOptoDir)
     
 for session = 1:numSessions
     %% Init Variable Placeholders
-    stimDesc    = [];
-    azimuths    = [];
-    elevations  = [];
-    noOptoIdx   = [];
-    v1StimIdx   = [];
-    scStimIdx   = [];
-    twoOptoIdx  = [];
-    topUpIdx    = [];
-    outcomes    = [];
-    RTs         = [];
-    contrast    = [];
-    optoV1MW    = [];
-    optoSCMW    = [];
+    stimDesc = [];
+    azimuths = [];
+    elevations = [];
+    noOptoIdx = [];
+    v1StimIdx = [];
+    scStimIdx = [];
+    twoOptoIdx = [];
+    topUpIdx = [];
+    outcomes = [];
+    RTs = [];
+    contrast = [];
+
     load(mouseDir(session).name); % Load Session MatFile
 
     % Sometimes github won't have todays data but the file exists. When
@@ -90,14 +89,9 @@ for session = 1:numSessions
     outcomes = [outcomes, trials.trialEnd];
     RTs = [RTs, trials.reactTimeMS];
     contrast = [contrast, trials.contrastPC];
-    
 
     % Get Stim Info for reach trial
     trialStruct = [trials(:).trial];
-
-    % optoPowers
-    optoV1MW    = [optoV1MW, [trialStruct.opto0PowerMW]];
-    optoSCMW    = [optoSCMW, [trialStruct.opto1PowerMW]];
 
     % SetUp the outcomes indicies
     indices.correct = outcomes == 0;
@@ -220,21 +214,24 @@ for session = 1:numSessions
     else  
         masterStruct(rowCounter).twoOptoDeltaDp = dP_twoOpto - dP_noOpto; 
     end
-
-    masterStruct(rowCounter).dPrimes     = dPrimes;    % d-Primes
-    masterStruct(rowCounter).criterions  = criterions;    % Criterions
-    masterStruct(rowCounter).hitRates    = hitRate;       % Hit Rates
-    masterStruct(rowCounter).trialCounts = trialCounts;   % nTrials per stimulus condition
-    masterStruct(rowCounter).hitCounts   = hitCounts;       % nhits per stimulus condition
+    % d-Primes
+    masterStruct(rowCounter).dPrimes = dPrimes;
+    % Criterions
+    masterStruct(rowCounter).criterions = criterions;
+    % Hit Rates
+    masterStruct(rowCounter).hitRates = hitRate;
+    % number of trials in each stimulus condition
+    masterStruct(rowCounter).trialCounts = trialCounts;
+    % number of hits in each stimulus condition
+    masterStruct(rowCounter).hitCounts = hitCounts;
     % Session Info
-    masterStruct(rowCounter).outcomes      = theIndices;
-    masterStruct(rowCounter).visualStimPC  = contrast;
+    masterStruct(rowCounter).outcomes = theIndices;
+    masterStruct(rowCounter).visualStimPC = contrast;
     masterStruct(rowCounter).reactionTimes = reactionTimes;
-    masterStruct(rowCounter).faRate        = pFA;
-    masterStruct(rowCounter).lapseRate     = lapseRate;
-    masterStruct(rowCounter).trialTypes    = logicals;
-    masterStruct(rowCounter).V1Power       = optoV1MW;
-    masterStruct(rowCounter).SCPower       = optoSCMW;
+    masterStruct(rowCounter).faRate = pFA;
+    masterStruct(rowCounter).lapseRate = lapseRate;
+    masterStruct(rowCounter).trialTypes = logicals;
+    
 % Go to Next Session, but first increment the counter
 rowCounter = rowCounter+1;
 clear trials stimDesc file dParam

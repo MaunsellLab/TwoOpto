@@ -62,6 +62,7 @@ ylabel('d'' SC inhibited');
 grid on;
 hold off;
 %% SC delta d' vs. V1 delta d'
+figure;
 scatter(v1,sc, 30, 'filled', 'MarkerFaceColor', 'k');
 axis square;
 hold on;
